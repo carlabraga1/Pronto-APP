@@ -1,0 +1,13 @@
+{
+  "name": "meu-projeto",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "mobile",
+    "backend"
+  ],
+  "scripts": {
+    "mobile": "npm run start --workspace=mobile",
+    "backend": "npm run start:dev --workspace=backend"
+  }
+}

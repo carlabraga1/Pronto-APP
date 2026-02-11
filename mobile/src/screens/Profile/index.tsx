@@ -23,7 +23,12 @@ import {
   Scissors,
   Heart,
 } from 'lucide-react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RootStackParamList } from '../../@types/navigation';
 import { colors } from '../../constants/colors';
+
+type ProfileNav = NativeStackNavigationProp<RootStackParamList>;
 
 const favoriteServices = [
   { id: '1', name: 'Eletricista', icon: Zap },
@@ -41,6 +46,8 @@ const menuItems = [
 ];
 
 export default function ProfileScreen() {
+  const navigation = useNavigation<ProfileNav>();
+
   const handleMenuItem = (label: string) => {
     Alert.alert(label, `Navegar para ${label}`);
   };
@@ -72,7 +79,11 @@ export default function ProfileScreen() {
               </View>
             </View>
           </View>
-          <TouchableOpacity style={styles.editBtn} activeOpacity={0.7}>
+          <TouchableOpacity
+            style={styles.editBtn}
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('EditProfile')}
+          >
             <Text style={styles.editBtnText}>Editar Perfil</Text>
           </TouchableOpacity>
         </View>

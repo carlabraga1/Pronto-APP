@@ -2,6 +2,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import TabNavigator from './TabNavigator';
 import LocationScreen from '../screens/Location';
 import SubCategoryScreen from '../screens/SubCategory';
+import EditProfileScreen from '../screens/EditProfile';
 
 const Stack = createNativeStackNavigator();
 
@@ -17,6 +18,11 @@ export default function AppNavigator() {
       <Stack.Screen
         name="SubCategory"
         component={SubCategoryScreen}
+        options={{ animation: 'slide_from_right' }}
+      />
+      <Stack.Screen
+        name="EditProfile"
+        component={EditProfileScreen}
         options={{ animation: 'slide_from_right' }}
       />
     </Stack.Navigator>

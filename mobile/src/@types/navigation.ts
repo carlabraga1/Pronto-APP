@@ -2,6 +2,7 @@ export type RootStackParamList = {
   Tabs: { address?: string };
   Location: undefined;
   SubCategory: { categoryId: string };
+  EditProfile: undefined;
 };
 
 export type TabParamList = {

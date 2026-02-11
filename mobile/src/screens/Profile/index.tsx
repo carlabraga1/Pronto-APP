@@ -41,7 +41,6 @@ const favoriteServices = [
 const menuItems = [
   { id: '1', label: 'Meus Endereços', icon: MapPinned },
   { id: '2', label: 'Métodos de Pagamento', icon: CreditCard },
-  { id: '3', label: 'Histórico de Pedidos', icon: ClipboardList },
   { id: '4', label: 'Notificações', icon: BellDot },
   { id: '5', label: 'Ajuda e Suporte', icon: CircleHelp },
   { id: '6', label: 'Sobre o Pronto', icon: Info },

@@ -4,6 +4,7 @@ export type RootStackParamList = {
   SubCategory: { categoryId: string };
   EditProfile: undefined;
   PrivacyPolicy: undefined;
+  OrderDetail: { orderId: string };
   EditField: {
     label: string;
     value: string;

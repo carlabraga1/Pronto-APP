@@ -5,6 +5,7 @@ import SubCategoryScreen from '../screens/SubCategory';
 import EditProfileScreen from '../screens/Profile/EditProfile';
 import EditFieldScreen from '../screens/Profile/EditProfile/EditField';
 import PrivacyPolicyScreen from '../screens/Profile/PrivacyPolicy';
+import OrderDetailScreen from '../screens/Orders/OrderDetail';
 
 const Stack = createNativeStackNavigator();
 
@@ -30,6 +31,11 @@ export default function AppNavigator() {
       <Stack.Screen
         name="PrivacyPolicy"
         component={PrivacyPolicyScreen}
+        options={{ animation: 'slide_from_right' }}
+      />
+      <Stack.Screen
+        name="OrderDetail"
+        component={OrderDetailScreen}
         options={{ animation: 'slide_from_right' }}
       />
       <Stack.Screen

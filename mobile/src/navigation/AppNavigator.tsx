@@ -2,7 +2,9 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import TabNavigator from './TabNavigator';
 import LocationScreen from '../screens/Location';
 import SubCategoryScreen from '../screens/SubCategory';
-import EditProfileScreen from '../screens/EditProfile';
+import EditProfileScreen from '../screens/Profile/EditProfile';
+import EditFieldScreen from '../screens/Profile/EditProfile/EditField';
+import PrivacyPolicyScreen from '../screens/Profile/PrivacyPolicy';
 
 const Stack = createNativeStackNavigator();
 
@@ -23,6 +25,16 @@ export default function AppNavigator() {
       <Stack.Screen
         name="EditProfile"
         component={EditProfileScreen}
+        options={{ animation: 'slide_from_right' }}
+      />
+      <Stack.Screen
+        name="PrivacyPolicy"
+        component={PrivacyPolicyScreen}
+        options={{ animation: 'slide_from_right' }}
+      />
+      <Stack.Screen
+        name="EditField"
+        component={EditFieldScreen}
         options={{ animation: 'slide_from_right' }}
       />
     </Stack.Navigator>

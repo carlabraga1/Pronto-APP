@@ -1,6 +1,7 @@
 import {
   View,
   Text,
+  Image,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
@@ -27,6 +28,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../../@types/navigation';
 import { colors } from '../../constants/colors';
+import { useProfile } from '../../contexts/ProfileContext';
 
 type ProfileNav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -47,6 +49,7 @@ const menuItems = [
 
 export default function ProfileScreen() {
   const navigation = useNavigation<ProfileNav>();
+  const { profileImage } = useProfile();
 
   const handleMenuItem = (label: string) => {
     Alert.alert(label, `Navegar para ${label}`);
@@ -66,10 +69,18 @@ export default function ProfileScreen() {
         <Text style={styles.title}>Perfil</Text>
 
         {/* Card do usuário */}
-        <View style={styles.userCard}>
+        <TouchableOpacity
+          style={styles.userCard}
+          activeOpacity={0.7}
+          onPress={() => navigation.navigate('EditProfile')}
+        >
           <View style={styles.userInfo}>
             <View style={styles.avatar}>
-              <UserRound size={32} color={colors.textSecondary} />
+              {profileImage ? (
+                <Image source={{ uri: profileImage }} style={styles.avatarImage} />
+              ) : (
+                <UserRound size={32} color={colors.textSecondary} />
+              )}
             </View>
             <View style={styles.userText}>
               <Text style={styles.userName}>Carlos T.</Text>
@@ -79,14 +90,8 @@ export default function ProfileScreen() {
               </View>
             </View>
           </View>
-          <TouchableOpacity
-            style={styles.editBtn}
-            activeOpacity={0.7}
-            onPress={() => navigation.navigate('EditProfile')}
-          >
-            <Text style={styles.editBtnText}>Editar Perfil</Text>
-          </TouchableOpacity>
-        </View>
+          <ChevronRight size={20} color={colors.textSecondary} />
+        </TouchableOpacity>
 
         {/* Serviços favoritos */}
         <View style={styles.favSection}>
@@ -178,6 +183,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.backgroundDark,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
   },
   userText: {
     gap: 4,
@@ -197,19 +207,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
-  editBtn: {
-    borderWidth: 1,
-    borderColor: colors.brand,
-    borderRadius: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-  },
-  editBtnText: {
-    color: colors.brand,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-
   // Favoritos
   favSection: {
     marginBottom: 24,

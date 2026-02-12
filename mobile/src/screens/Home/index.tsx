@@ -76,9 +76,15 @@ export default function HomeScreen() {
             <Text style={styles.logo}>Pronto</Text>
             <Text style={styles.subtitle}>Serviços rápidos com IA</Text>
           </View>
-          <TouchableOpacity style={styles.notificationBtn} activeOpacity={0.7}>
+          <TouchableOpacity
+            style={styles.notificationBtn}
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('Notifications')}
+          >
             <Bell size={22} color={colors.textPrimary} />
-            <View style={styles.notificationBadge} />
+            <View style={styles.notificationBadge}>
+              <Text style={styles.notificationBadgeText}>3</Text>
+            </View>
           </TouchableOpacity>
         </View>
 
@@ -232,12 +238,20 @@ const styles = StyleSheet.create({
   },
   notificationBadge: {
     position: 'absolute',
-    top: 10,
-    right: 10,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+    top: 6,
+    right: 6,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
     backgroundColor: colors.danger,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  notificationBadgeText: {
+    color: colors.textPrimary,
+    fontSize: 10,
+    fontWeight: '700',
   },
   locationBox: {
     flexDirection: 'row',

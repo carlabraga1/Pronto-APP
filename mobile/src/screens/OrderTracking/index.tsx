@@ -9,7 +9,17 @@ import {
   Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import MapView, { Marker, Polyline } from 'react-native-maps';
+import { Platform } from 'react-native';
+
+let MapView: any = View;
+let Marker: any = View;
+let Polyline: any = View;
+if (Platform.OS !== 'web') {
+  const maps = require('react-native-maps');
+  MapView = maps.default;
+  Marker = maps.Marker;
+  Polyline = maps.Polyline;
+}
 import {
   ArrowLeft,
   UserRound,

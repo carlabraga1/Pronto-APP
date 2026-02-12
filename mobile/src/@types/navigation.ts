@@ -1,3 +1,10 @@
+export type AuthStackParamList = {
+  Welcome: undefined;
+  Login: undefined;
+  Register: undefined;
+  ForgotPassword: undefined;
+};
+
 export type RootStackParamList = {
   Tabs: { address?: string };
   Location: undefined;
@@ -15,6 +22,7 @@ export type RootStackParamList = {
   OrderTracking: { orderId: string };
   OrderChat: { orderId: string };
   ProfessionalProfile: { professionalId: string };
+  Notifications: undefined;
   EditField: {
     label: string;
     value: string;

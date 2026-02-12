@@ -10,8 +10,17 @@ import {
   Keyboard,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import MapView, { Marker, Region } from 'react-native-maps';
+import { Platform } from 'react-native';
 import { ArrowLeft, LocateFixed, MapPin } from 'lucide-react-native';
+
+type Region = { latitude: number; longitude: number; latitudeDelta: number; longitudeDelta: number };
+let MapView: any = View;
+let Marker: any = View;
+if (Platform.OS !== 'web') {
+  const maps = require('react-native-maps');
+  MapView = maps.default;
+  Marker = maps.Marker;
+}
 import { colors } from '../../constants/colors';
 import {
   getCurrentLocation,

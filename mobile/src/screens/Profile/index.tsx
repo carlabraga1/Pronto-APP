@@ -29,6 +29,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../../@types/navigation';
 import { colors } from '../../constants/colors';
 import { useProfile } from '../../contexts/ProfileContext';
+import { useAuth } from '../../contexts/AuthContext';
 
 type ProfileNav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -49,6 +50,7 @@ const menuItems = [
 export default function ProfileScreen() {
   const navigation = useNavigation<ProfileNav>();
   const { profileImage } = useProfile();
+  const { signOut } = useAuth();
 
   const handleMenuItem = (label: string) => {
     Alert.alert(label, `Navegar para ${label}`);
@@ -57,7 +59,7 @@ export default function ProfileScreen() {
   const handleLogout = () => {
     Alert.alert('Sair da conta', 'Tem certeza que deseja sair?', [
       { text: 'Cancelar', style: 'cancel' },
-      { text: 'Sair', style: 'destructive' },
+      { text: 'Sair', style: 'destructive', onPress: signOut },
     ]);
   };
 

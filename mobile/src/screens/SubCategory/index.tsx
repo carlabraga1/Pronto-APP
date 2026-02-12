@@ -4,7 +4,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   FlatList,
-  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft } from 'lucide-react-native';
@@ -18,7 +17,7 @@ export default function SubCategoryScreen({ route, navigation }: any) {
   if (!category) return null;
 
   const handleSelect = (name: string) => {
-    Alert.alert('Criar Pedido', `Serviço: ${name}`);
+    navigation.navigate('CreateOrder', { service: name, categoryId });
   };
 
   const Icon = category.icon;

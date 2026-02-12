@@ -22,7 +22,7 @@ import { colors } from '../../constants/colors';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
-type OrderStatus = 'AGUARDANDO' | 'EM_ANDAMENTO' | 'FINALIZADO' | 'CANCELADO';
+type OrderStatus = 'PROCURANDO' | 'ACEITO' | 'A_CAMINHO' | 'INICIADO' | 'FINALIZADO' | 'CANCELADO';
 
 export type Order = {
   id: string;
@@ -39,8 +39,10 @@ export type Order = {
 };
 
 const statusConfig: Record<OrderStatus, { label: string; color: string; bg: string }> = {
-  AGUARDANDO: { label: 'Aguardando', color: colors.brand, bg: 'rgba(255,193,7,0.15)' },
-  EM_ANDAMENTO: { label: 'Em andamento', color: colors.success, bg: 'rgba(76,175,80,0.15)' },
+  PROCURANDO: { label: 'Procurando', color: colors.brand, bg: 'rgba(255,193,7,0.15)' },
+  ACEITO: { label: 'Aceito', color: colors.success, bg: 'rgba(76,175,80,0.15)' },
+  A_CAMINHO: { label: 'A caminho', color: colors.info, bg: 'rgba(59,130,246,0.15)' },
+  INICIADO: { label: 'Iniciado', color: colors.success, bg: 'rgba(76,175,80,0.15)' },
   FINALIZADO: { label: 'Finalizado', color: colors.success, bg: 'rgba(76,175,80,0.15)' },
   CANCELADO: { label: 'Cancelado', color: colors.danger, bg: 'rgba(239,68,68,0.15)' },
 };
@@ -52,7 +54,7 @@ export const mockOrders: Order[] = [
     professional: 'João Silva',
     date: '11 fev 2026',
     time: '14:00',
-    status: 'AGUARDANDO',
+    status: 'PROCURANDO',
     price: 'R$ 150,00',
     address: 'Rua das Flores, 123 - São Paulo',
     phone: '+55 (11) 98888-7777',
@@ -65,7 +67,7 @@ export const mockOrders: Order[] = [
     professional: 'Pedro Santos',
     date: '11 fev 2026',
     time: '10:00',
-    status: 'EM_ANDAMENTO',
+    status: 'A_CAMINHO',
     price: 'R$ 200,00',
     address: 'Rua das Flores, 123 - São Paulo',
     phone: '+55 (11) 97777-6666',

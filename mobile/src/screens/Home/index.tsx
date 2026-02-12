@@ -5,7 +5,6 @@ import {
   StyleSheet,
   TouchableOpacity,
   TextInput,
-  Alert,
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
@@ -59,11 +58,11 @@ export default function HomeScreen() {
     setLoadingLocation(false);
   };
 
-  const handleCategory = (categoryId: string, hasSubcategories: boolean) => {
+  const handleCategory = (categoryId: string, categoryName: string, hasSubcategories: boolean) => {
     if (hasSubcategories) {
       navigation.navigate('SubCategory', { categoryId });
     } else {
-      Alert.alert('Criar Pedido', 'Categoria: Emergência');
+      navigation.navigate('CreateOrder', { service: categoryName, categoryId });
     }
   };
 
@@ -133,7 +132,7 @@ export default function HomeScreen() {
                   activeOpacity={0.7}
                   onPress={() => {
                     setSearchQuery('');
-                    Alert.alert('Criar Pedido', `Serviço: ${item.name}`);
+                    navigation.navigate('CreateOrder', { service: item.name, categoryId: item.categoryId });
                   }}
                 >
                   <Icon size={20} color={colors.brand} />
@@ -163,7 +162,7 @@ export default function HomeScreen() {
                 key={cat.id}
                 style={styles.categoryCard}
                 activeOpacity={0.7}
-                onPress={() => handleCategory(cat.id, cat.subs.length > 0)}
+                onPress={() => handleCategory(cat.id, cat.name, cat.subs.length > 0)}
               >
                 <View style={styles.iconContainer}>
                   <Icon size={26} color={colors.brand} />
@@ -176,7 +175,11 @@ export default function HomeScreen() {
 
         {/* Pedido ativo */}
         {hasActiveOrder && (
-          <TouchableOpacity style={styles.activeOrderCard} activeOpacity={0.7}>
+          <TouchableOpacity
+            style={styles.activeOrderCard}
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('OrderTracking', { orderId: '1' })}
+          >
             <View style={styles.activeOrderInfo}>
               <View style={styles.activeOrderDot} />
               <View>

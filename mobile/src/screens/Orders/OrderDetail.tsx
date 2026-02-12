@@ -27,8 +27,10 @@ import { mockOrders } from './index';
 type OrderDetailRoute = RouteProp<RootStackParamList, 'OrderDetail'>;
 
 const statusConfig = {
-  AGUARDANDO: { label: 'Aguardando confirmação', color: colors.brand, bg: 'rgba(255,193,7,0.15)' },
-  EM_ANDAMENTO: { label: 'Em andamento', color: colors.success, bg: 'rgba(76,175,80,0.15)' },
+  PROCURANDO: { label: 'Procurando profissional', color: colors.brand, bg: 'rgba(255,193,7,0.15)' },
+  ACEITO: { label: 'Aceito', color: colors.success, bg: 'rgba(76,175,80,0.15)' },
+  A_CAMINHO: { label: 'A caminho', color: colors.info, bg: 'rgba(59,130,246,0.15)' },
+  INICIADO: { label: 'Iniciado', color: colors.success, bg: 'rgba(76,175,80,0.15)' },
   FINALIZADO: { label: 'Finalizado', color: colors.success, bg: 'rgba(76,175,80,0.15)' },
   CANCELADO: { label: 'Cancelado', color: colors.danger, bg: 'rgba(239,68,68,0.15)' },
 } as const;

@@ -6,6 +6,11 @@ import EditProfileScreen from '../screens/Profile/EditProfile';
 import EditFieldScreen from '../screens/Profile/EditProfile/EditField';
 import PrivacyPolicyScreen from '../screens/Profile/PrivacyPolicy';
 import OrderDetailScreen from '../screens/Orders/OrderDetail';
+import CreateOrderScreen from '../screens/CreateOrder';
+import AvailableProfessionalsScreen from '../screens/AvailableProfessionals';
+import OrderTrackingScreen from '../screens/OrderTracking';
+import ChatScreen from '../screens/Chat';
+import ProfessionalProfileScreen from '../screens/ProfessionalProfile';
 
 const Stack = createNativeStackNavigator();
 
@@ -36,6 +41,31 @@ export default function AppNavigator() {
       <Stack.Screen
         name="OrderDetail"
         component={OrderDetailScreen}
+        options={{ animation: 'slide_from_right' }}
+      />
+      <Stack.Screen
+        name="CreateOrder"
+        component={CreateOrderScreen}
+        options={{ animation: 'slide_from_right' }}
+      />
+      <Stack.Screen
+        name="AvailableProfessionals"
+        component={AvailableProfessionalsScreen}
+        options={{ animation: 'slide_from_right' }}
+      />
+      <Stack.Screen
+        name="OrderTracking"
+        component={OrderTrackingScreen}
+        options={{ animation: 'slide_from_right' }}
+      />
+      <Stack.Screen
+        name="OrderChat"
+        component={ChatScreen}
+        options={{ animation: 'slide_from_right' }}
+      />
+      <Stack.Screen
+        name="ProfessionalProfile"
+        component={ProfessionalProfileScreen}
         options={{ animation: 'slide_from_right' }}
       />
       <Stack.Screen

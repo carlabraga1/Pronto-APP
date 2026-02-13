@@ -46,8 +46,10 @@ export default function RegisterScreen() {
     if (!validate()) return;
     try {
       await signUp(name.trim(), email.trim(), password);
-    } catch {
-      Alert.alert('Erro', 'Não foi possível criar a conta. Tente novamente.');
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.message || 'Não foi possível criar a conta. Tente novamente.';
+      Alert.alert('Erro', msg);
     }
   };
 

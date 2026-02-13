@@ -6,25 +6,39 @@ import {
   StyleSheet,
   TouchableOpacity,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft } from 'lucide-react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { colors } from '../../../constants/colors';
 import { RootStackParamList } from '../../../@types/navigation';
+import { useProfile } from '../../../contexts/ProfileContext';
 
 type EditFieldRouteProp = RouteProp<RootStackParamList, 'EditField'>;
 
 export default function EditFieldScreen() {
   const navigation = useNavigation();
   const route = useRoute<EditFieldRouteProp>();
-  const { label, value, keyboardType = 'default' } = route.params;
+  const { label, value, field, keyboardType = 'default' } = route.params;
+  const { updateProfile } = useProfile();
 
   const [text, setText] = useState(value);
+  const [loading, setLoading] = useState(false);
 
-  const handleSave = () => {
-    Alert.alert('Sucesso', `${label} atualizado com sucesso!`);
-    navigation.goBack();
+  const handleSave = async () => {
+    if (!text.trim()) return;
+    setLoading(true);
+    try {
+      await updateProfile({ [field]: text.trim() });
+      Alert.alert('Sucesso', `${label} atualizado com sucesso!`);
+      navigation.goBack();
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || `Não foi possível atualizar ${label.toLowerCase()}.`;
+      Alert.alert('Erro', msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -54,12 +68,16 @@ export default function EditFieldScreen() {
         />
 
         <TouchableOpacity
-          style={[styles.saveBtn, !text.trim() && styles.saveBtnDisabled]}
+          style={[styles.saveBtn, (!text.trim() || loading) && styles.saveBtnDisabled]}
           activeOpacity={0.8}
           onPress={handleSave}
-          disabled={!text.trim()}
+          disabled={!text.trim() || loading}
         >
-          <Text style={styles.saveBtnText}>Salvar</Text>
+          {loading ? (
+            <ActivityIndicator color={colors.backgroundDark} />
+          ) : (
+            <Text style={styles.saveBtnText}>Salvar</Text>
+          )}
         </TouchableOpacity>
       </View>
     </SafeAreaView>

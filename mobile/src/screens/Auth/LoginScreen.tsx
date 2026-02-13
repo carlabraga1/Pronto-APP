@@ -39,8 +39,10 @@ export default function LoginScreen() {
     if (!validate()) return;
     try {
       await signIn(email.trim(), password);
-    } catch {
-      Alert.alert('Erro', 'Não foi possível entrar. Tente novamente.');
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.message || 'Não foi possível entrar. Tente novamente.';
+      Alert.alert('Erro', msg);
     }
   };
 

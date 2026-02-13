@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,22 +7,19 @@ import {
   TouchableOpacity,
   ScrollView,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   UserRound,
   MapPinned,
   CreditCard,
-  ClipboardList,
   BellDot,
   CircleHelp,
   Info,
   ChevronRight,
   Star,
   LogOut,
-  Zap,
-  Wrench,
-  Scissors,
   Heart,
 } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -33,12 +31,6 @@ import { useAuth } from '../../contexts/AuthContext';
 
 type ProfileNav = NativeStackNavigationProp<RootStackParamList>;
 
-const favoriteServices = [
-  { id: '1', name: 'Eletricista', icon: Zap },
-  { id: '2', name: 'Encanador', icon: Wrench },
-  { id: '3', name: 'Cabeleireiro', icon: Scissors },
-];
-
 const menuItems = [
   { id: '1', label: 'Meus Endereços', icon: MapPinned },
   { id: '2', label: 'Métodos de Pagamento', icon: CreditCard },
@@ -49,8 +41,12 @@ const menuItems = [
 
 export default function ProfileScreen() {
   const navigation = useNavigation<ProfileNav>();
-  const { profileImage } = useProfile();
+  const { profile, loadingProfile, fetchProfile } = useProfile();
   const { signOut } = useAuth();
+
+  useEffect(() => {
+    fetchProfile();
+  }, [fetchProfile]);
 
   const handleMenuItem = (label: string) => {
     Alert.alert(label, `Navegar para ${label}`);
@@ -77,46 +73,51 @@ export default function ProfileScreen() {
         >
           <View style={styles.userInfo}>
             <View style={styles.avatar}>
-              {profileImage ? (
-                <Image source={{ uri: profileImage }} style={styles.avatarImage} />
+              {profile?.profileImage ? (
+                <Image source={{ uri: profile.profileImage }} style={styles.avatarImage} />
               ) : (
                 <UserRound size={32} color={colors.textSecondary} />
               )}
             </View>
             <View style={styles.userText}>
-              <Text style={styles.userName}>Carlos T.</Text>
-              <View style={styles.ratingRow}>
-                <Star size={14} color={colors.brand} fill={colors.brand} />
-                <Text style={styles.ratingText}>4.9</Text>
-              </View>
+              {loadingProfile ? (
+                <ActivityIndicator size="small" color={colors.brand} />
+              ) : (
+                <>
+                  <Text style={styles.userName}>{profile?.name || 'Usuário'}</Text>
+                  <View style={styles.ratingRow}>
+                    <Star size={14} color={colors.brand} fill={colors.brand} />
+                    <Text style={styles.ratingText}>{profile?.rating?.toFixed(1) || '0.0'}</Text>
+                  </View>
+                </>
+              )}
             </View>
           </View>
           <ChevronRight size={20} color={colors.textSecondary} />
         </TouchableOpacity>
 
         {/* Serviços favoritos */}
-        <View style={styles.favSection}>
-          <View style={styles.favHeader}>
-            <Text style={styles.favTitle}>Serviços favoritos</Text>
-            <TouchableOpacity activeOpacity={0.7}>
-              <Text style={styles.favSeeAll}>Ver todos</Text>
-            </TouchableOpacity>
-          </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.favList}>
-            {favoriteServices.map((item) => {
-              const Icon = item.icon;
-              return (
+        {profile?.favorites && profile.favorites.length > 0 && (
+          <View style={styles.favSection}>
+            <View style={styles.favHeader}>
+              <Text style={styles.favTitle}>Serviços favoritos</Text>
+              <TouchableOpacity activeOpacity={0.7}>
+                <Text style={styles.favSeeAll}>Ver todos</Text>
+              </TouchableOpacity>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.favList}>
+              {profile.favorites.map((item) => (
                 <TouchableOpacity key={item.id} style={styles.favCard} activeOpacity={0.7}>
                   <View style={styles.favIcon}>
-                    <Icon size={22} color={colors.brand} />
+                    <Text style={styles.favIconText}>{item.subcategory.icon}</Text>
                   </View>
-                  <Text style={styles.favName}>{item.name}</Text>
+                  <Text style={styles.favName}>{item.subcategory.name}</Text>
                   <Heart size={12} color={colors.danger} fill={colors.danger} />
                 </TouchableOpacity>
-              );
-            })}
-          </ScrollView>
-        </View>
+              ))}
+            </ScrollView>
+          </View>
+        )}
 
         {/* Menu de opções */}
         <View style={styles.menuContainer}>
@@ -247,6 +248,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.backgroundDark,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  favIconText: {
+    fontSize: 22,
   },
   favName: {
     color: colors.textPrimary,

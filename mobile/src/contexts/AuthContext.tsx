@@ -1,8 +1,12 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import api from '../services/api';
 
 type User = {
+  id: number;
   name: string;
   email: string;
+  role: 'client' | 'professional';
 };
 
 type AuthContextData = {
@@ -11,37 +15,83 @@ type AuthContextData = {
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (name: string, email: string, password: string) => Promise<void>;
+  forgotPassword: (email: string) => Promise<void>;
   signOut: () => void;
 };
 
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);
 
+const TOKEN_KEY = '@pronto:token';
+const USER_KEY = '@pronto:user';
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  const signIn = async (email: string, _password: string) => {
-    setLoading(true);
-    // Simula chamada API
-    await new Promise((r) => setTimeout(r, 1200));
-    setUser({ name: 'Usuário Pronto', email });
-    setLoading(false);
+  // Recupera sessão salva ao abrir o app
+  useEffect(() => {
+    async function loadStoredData() {
+      const [storedToken, storedUser] = await Promise.all([
+        AsyncStorage.getItem(TOKEN_KEY),
+        AsyncStorage.getItem(USER_KEY),
+      ]);
+
+      if (storedToken && storedUser) {
+        setUser(JSON.parse(storedUser));
+      }
+
+      setLoading(false);
+    }
+
+    loadStoredData();
+  }, []);
+
+  const signIn = async (email: string, password: string) => {
+    const response = await api.post('/auth/login', {
+      email,
+      password,
+      role: 'client',
+    });
+
+    const { accessToken, user: userData } = response.data;
+
+    await AsyncStorage.setItem(TOKEN_KEY, accessToken);
+    await AsyncStorage.setItem(USER_KEY, JSON.stringify(userData));
+
+    setUser(userData);
   };
 
-  const signUp = async (name: string, email: string, _password: string) => {
-    setLoading(true);
-    await new Promise((r) => setTimeout(r, 1200));
-    setUser({ name, email });
-    setLoading(false);
+  const signUp = async (name: string, email: string, password: string) => {
+    const response = await api.post('/auth/register', {
+      name,
+      email,
+      password,
+      role: 'client',
+    });
+
+    const { accessToken, user: userData } = response.data;
+
+    await AsyncStorage.setItem(TOKEN_KEY, accessToken);
+    await AsyncStorage.setItem(USER_KEY, JSON.stringify(userData));
+
+    setUser(userData);
   };
 
-  const signOut = () => {
+  const forgotPassword = async (email: string) => {
+    await api.post('/auth/forgot-password', {
+      email,
+      role: 'client',
+    });
+  };
+
+  const signOut = async () => {
+    await AsyncStorage.multiRemove([TOKEN_KEY, USER_KEY]);
     setUser(null);
   };
 
   return (
     <AuthContext.Provider
-      value={{ user, signed: !!user, loading, signIn, signUp, signOut }}
+      value={{ user, signed: !!user, loading, signIn, signUp, forgotPassword, signOut }}
     >
       {children}
     </AuthContext.Provider>

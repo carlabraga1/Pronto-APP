@@ -14,9 +14,11 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { ArrowLeft, Mail, CircleCheck } from 'lucide-react-native';
 import { colors } from '../../constants/colors';
+import { useAuth } from '../../contexts/AuthContext';
 
 export default function ForgotPasswordScreen() {
   const navigation = useNavigation<any>();
+  const { forgotPassword } = useAuth();
 
   const [email, setEmail] = useState('');
   const [error, setError] = useState('');
@@ -30,10 +32,14 @@ export default function ForgotPasswordScreen() {
     }
     setError('');
     setLoading(true);
-    // Simula envio
-    await new Promise((r) => setTimeout(r, 1500));
-    setLoading(false);
-    setSent(true);
+    try {
+      await forgotPassword(email.trim());
+      setSent(true);
+    } catch {
+      setSent(true); // Não revela se o email existe ou não
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (sent) {

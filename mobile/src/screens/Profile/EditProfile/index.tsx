@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import {
   View,
   Text,
@@ -32,6 +33,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { colors } from '../../../constants/colors';
 import { RootStackParamList } from '../../../@types/navigation';
 import { useProfile } from '../../../contexts/ProfileContext';
+import { useAuth } from '../../../contexts/AuthContext';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
@@ -43,51 +45,34 @@ type PersonalField = {
   keyboardType?: 'default' | 'email-address' | 'phone-pad';
 };
 
-type LoginActivity = {
-  id: string;
-  device: string;
-  icon: typeof Smartphone;
-  location: string;
-  date: string;
-  active: boolean;
-};
-
 export default function EditProfileScreen() {
   const navigation = useNavigation<NavigationProp>();
-  const { profileImage, setProfileImage } = useProfile();
+  const {
+    profile,
+    loginActivities,
+    fetchProfile,
+    updateProfile,
+    changePassword,
+    fetchLoginActivities,
+    endAllSessions,
+    deleteAccount,
+  } = useProfile();
+  const { signOut } = useAuth();
 
-  const loginActivities: LoginActivity[] = [
-    {
-      id: '1',
-      device: 'iPhone 15 Pro',
-      icon: Smartphone,
-      location: 'São Paulo, SP',
-      date: 'Agora • Sessão atual',
-      active: true,
-    },
-    {
-      id: '2',
-      device: 'MacBook Pro',
-      icon: Monitor,
-      location: 'São Paulo, SP',
-      date: '10 fev 2026, 14:32',
-      active: false,
-    },
-    {
-      id: '3',
-      device: 'Samsung Galaxy S24',
-      icon: Smartphone,
-      location: 'Rio de Janeiro, RJ',
-      date: '08 fev 2026, 09:15',
-      active: false,
-    },
-  ];
+  useEffect(() => {
+    fetchProfile();
+    fetchLoginActivities();
+  }, [fetchProfile, fetchLoginActivities]);
 
   const personalFields: PersonalField[] = [
-    { id: 'name', label: 'Nome completo', value: 'Carlos T.', icon: UserRound },
-    { id: 'phone', label: 'Telefone', value: '+55 (11) 99999-9999', icon: Phone, keyboardType: 'phone-pad' },
-    { id: 'email', label: 'E-mail', value: 'carlos@email.com', icon: Mail, keyboardType: 'email-address' },
+    { id: 'name', label: 'Nome completo', value: profile?.name || '', icon: UserRound },
+    { id: 'phoneNumber', label: 'Telefone', value: profile?.phoneNumber || '', icon: Phone, keyboardType: 'phone-pad' },
+    { id: 'email', label: 'E-mail', value: profile?.email || '', icon: Mail, keyboardType: 'email-address' },
   ];
+
+  const addressText = profile?.address
+    ? `${profile.address.street}, ${profile.address.number} - ${profile.address.city}`
+    : 'Nenhum endereço cadastrado';
 
   const pickImage = async (source: 'camera' | 'gallery') => {
     if (source === 'camera') {
@@ -102,7 +87,11 @@ export default function EditProfileScreen() {
         quality: 0.8,
       });
       if (!result.canceled) {
-        setProfileImage(result.assets[0].uri);
+        try {
+          await updateProfile({ profileImage: result.assets[0].uri });
+        } catch {
+          Alert.alert('Erro', 'Não foi possível atualizar a foto.');
+        }
       }
     } else {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -117,7 +106,11 @@ export default function EditProfileScreen() {
         quality: 0.8,
       });
       if (!result.canceled) {
-        setProfileImage(result.assets[0].uri);
+        try {
+          await updateProfile({ profileImage: result.assets[0].uri });
+        } catch {
+          Alert.alert('Erro', 'Não foi possível atualizar a foto.');
+        }
       }
     }
   };
@@ -127,8 +120,18 @@ export default function EditProfileScreen() {
       { text: 'Câmera', onPress: () => pickImage('camera') },
       { text: 'Galeria', onPress: () => pickImage('gallery') },
     ];
-    if (profileImage) {
-      options.push({ text: 'Remover foto', style: 'destructive' as const, onPress: () => setProfileImage(null) });
+    if (profile?.profileImage) {
+      options.push({
+        text: 'Remover foto',
+        style: 'destructive' as const,
+        onPress: async () => {
+          try {
+            await updateProfile({ profileImage: '' });
+          } catch {
+            Alert.alert('Erro', 'Não foi possível remover a foto.');
+          }
+        },
+      });
     }
     options.push({ text: 'Cancelar', style: 'cancel' as const });
     Alert.alert('Alterar foto', 'Escolha uma opção', options);
@@ -144,7 +147,32 @@ export default function EditProfileScreen() {
   };
 
   const handleChangePassword = () => {
-    Alert.alert('Alterar Senha', 'Funcionalidade em desenvolvimento');
+    Alert.prompt(
+      'Alterar Senha',
+      'Digite sua senha atual:',
+      (currentPwd) => {
+        if (!currentPwd) return;
+        Alert.prompt(
+          'Nova Senha',
+          'Digite a nova senha (mín. 6 caracteres):',
+          async (newPwd) => {
+            if (!newPwd || newPwd.length < 6) {
+              Alert.alert('Erro', 'A nova senha deve ter no mínimo 6 caracteres.');
+              return;
+            }
+            try {
+              await changePassword(currentPwd, newPwd);
+              Alert.alert('Sucesso', 'Senha alterada com sucesso!');
+            } catch (err: any) {
+              const msg = err?.response?.data?.message || 'Não foi possível alterar a senha.';
+              Alert.alert('Erro', msg);
+            }
+          },
+          'secure-text',
+        );
+      },
+      'secure-text',
+    );
   };
 
   const handleLogoutAll = () => {
@@ -156,8 +184,13 @@ export default function EditProfileScreen() {
         {
           text: 'Encerrar todas',
           style: 'destructive',
-          onPress: () => {
-            Alert.alert('Sessões encerradas', 'Todas as outras sessões foram encerradas com sucesso.');
+          onPress: async () => {
+            try {
+              await endAllSessions();
+              Alert.alert('Sucesso', 'Todas as outras sessões foram encerradas.');
+            } catch {
+              Alert.alert('Erro', 'Não foi possível encerrar as sessões.');
+            }
           },
         },
       ],
@@ -170,9 +203,38 @@ export default function EditProfileScreen() {
       'Tem certeza? Esta ação é irreversível e todos os seus dados serão apagados.',
       [
         { text: 'Cancelar', style: 'cancel' },
-        { text: 'Excluir', style: 'destructive' },
+        {
+          text: 'Excluir',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await deleteAccount();
+              signOut();
+            } catch {
+              Alert.alert('Erro', 'Não foi possível excluir a conta.');
+            }
+          },
+        },
       ],
     );
+  };
+
+  const formatDate = (dateStr: string) => {
+    const d = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - d.getTime();
+    const diffMin = Math.floor(diffMs / 60000);
+
+    if (diffMin < 5) return 'Agora';
+    if (diffMin < 60) return `${diffMin} min atrás`;
+
+    return d.toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
   };
 
   return (
@@ -195,8 +257,8 @@ export default function EditProfileScreen() {
         <View style={styles.avatarSection}>
           <View style={styles.avatarWrapper}>
             <View style={styles.avatar}>
-              {profileImage ? (
-                <Image source={{ uri: profileImage }} style={styles.avatarImage} />
+              {profile?.profileImage ? (
+                <Image source={{ uri: profile.profileImage }} style={styles.avatarImage} />
               ) : (
                 <UserRound size={48} color={colors.textSecondary} />
               )}
@@ -234,7 +296,7 @@ export default function EditProfileScreen() {
                     <Icon size={18} color={colors.textSecondary} />
                     <View style={styles.fieldText}>
                       <Text style={styles.fieldLabel}>{field.label}</Text>
-                      <Text style={styles.fieldValue}>{field.value}</Text>
+                      <Text style={styles.fieldValue}>{field.value || 'Não informado'}</Text>
                     </View>
                   </View>
                   <ChevronRight size={18} color={colors.textSecondary} />
@@ -257,7 +319,7 @@ export default function EditProfileScreen() {
                 <MapPin size={18} color={colors.textSecondary} />
                 <View style={styles.fieldText}>
                   <Text style={styles.fieldLabel}>Endereço principal</Text>
-                  <Text style={styles.fieldValue}>Rua das Flores, 123 - São Paulo</Text>
+                  <Text style={styles.fieldValue}>{addressText}</Text>
                 </View>
               </View>
               <MapPinned size={18} color={colors.brand} />
@@ -290,9 +352,12 @@ export default function EditProfileScreen() {
               <Text style={styles.loginHeaderText}>Atividades de login</Text>
             </View>
 
-            {loginActivities.map((activity, index) => {
-              const DeviceIcon = activity.icon;
-              return (
+            {loginActivities.length === 0 ? (
+              <View style={styles.loginItem}>
+                <Text style={styles.fieldValue}>Nenhuma atividade registrada</Text>
+              </View>
+            ) : (
+              loginActivities.map((activity, index) => (
                 <View
                   key={activity.id}
                   style={[
@@ -301,23 +366,23 @@ export default function EditProfileScreen() {
                   ]}
                 >
                   <View style={styles.loginIcon}>
-                    <DeviceIcon size={18} color={activity.active ? colors.brand : colors.textSecondary} />
+                    <Smartphone size={18} color={activity.isActive ? colors.brand : colors.textSecondary} />
                   </View>
                   <View style={styles.loginInfo}>
                     <View style={styles.loginDeviceRow}>
                       <Text style={styles.fieldLabel}>{activity.device}</Text>
-                      {activity.active && (
+                      {activity.isActive && (
                         <View style={styles.activeBadge}>
                           <Text style={styles.activeBadgeText}>Ativo</Text>
                         </View>
                       )}
                     </View>
-                    <Text style={styles.fieldValue}>{activity.location}</Text>
-                    <Text style={styles.loginDate}>{activity.date}</Text>
+                    <Text style={styles.fieldValue}>{activity.location || 'Local desconhecido'}</Text>
+                    <Text style={styles.loginDate}>{formatDate(activity.loginTime)}</Text>
                   </View>
                 </View>
-              );
-            })}
+              ))
+            )}
 
             {/* Encerrar todas as sessões */}
             <TouchableOpacity
@@ -335,7 +400,7 @@ export default function EditProfileScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Privacidade</Text>
           <View style={styles.card}>
-           
+
 
             <TouchableOpacity
               style={[styles.fieldItem, styles.fieldBorder]}

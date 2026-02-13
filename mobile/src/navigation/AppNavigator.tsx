@@ -1,5 +1,7 @@
+import { View, ActivityIndicator, StyleSheet } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAuth } from '../contexts/AuthContext';
+import { colors } from '../constants/colors';
 import TabNavigator from './TabNavigator';
 import LocationScreen from '../screens/Location';
 import SubCategoryScreen from '../screens/SubCategory';
@@ -21,7 +23,15 @@ import ForgotPasswordScreen from '../screens/Auth/ForgotPasswordScreen';
 const Stack = createNativeStackNavigator();
 
 export default function AppNavigator() {
-  const { signed } = useAuth();
+  const { signed, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <View style={loadingStyles.container}>
+        <ActivityIndicator size="large" color={colors.brand} />
+      </View>
+    );
+  }
 
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -116,3 +126,12 @@ export default function AppNavigator() {
     </Stack.Navigator>
   );
 }
+
+const loadingStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.backgroundDark,
+  },
+});

@@ -1,16 +1,289 @@
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
 }
 
+// ─── ENUMS ───────────────────────────────────────────────
+
+enum OrderStatus {
+  PROCURANDO
+  AGUARDANDO
+  ACEITO
+  A_CAMINHO
+  INICIADO
+  FINALIZADO
+  CANCELADO
+}
+
+enum ScheduleType {
+  NOW
+  SCHEDULED
+}
+
+enum NotificationType {
+  ORDER
+  CHAT
+  PROMO
+}
+
+enum SenderType {
+  CLIENT
+  PROFESSIONAL
+}
+
+enum PaymentType {
+  CREDIT_CARD
+  DEBIT_CARD
+  PIX
+  BANK_TRANSFER
+}
+
+// ─── USER (Cliente) ──────────────────────────────────────
+
 model User {
-  id        Int      @id @default(autoincrement())
-  email     String   @unique
-  name      String?
+  id           Int      @id @default(autoincrement())
+  email        String   @unique
+  password     String
+  name         String
+  phoneNumber  String?
+  profileImage String?
+  rating       Float    @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  addresses       Address[]
+  paymentMethods  PaymentMethod[]
+  orders          Order[]
+  reviews         Review[]
+  messages        Message[]
+  notifications   Notification[]
+  favorites       FavoriteService[]
+  loginActivities LoginActivity[]
+}
+
+// ─── PROFESSIONAL (Prestador de Serviço) ─────────────────
+
+model Professional {
+  id                Int      @id @default(autoincrement())
+  email             String   @unique
+  password          String
+  name              String
+  phoneNumber       String?
+  profileImage      String?
+  bio               String?
+  city              String?
+  rating            Float    @default(0)
+  reviewCount       Int      @default(0)
+  completedServices Int      @default(0)
+  responseTime      Int?
+  verified          Boolean  @default(false)
+  isActive          Boolean  @default(true)
+  servicePrice      Float?
+  memberSince       DateTime @default(now())
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  categoryId Int?
+  category   ServiceCategory? @relation(fields: [categoryId], references: [id])
+
+  orders          Order[]
+  reviews         Review[]
+  messages        Message[]
+  loginActivities LoginActivity[]
+}
+
+// ─── SERVICE CATEGORY ────────────────────────────────────
+
+model ServiceCategory {
+  id   Int    @id @default(autoincrement())
+  name String @unique
+  icon String
+
+  subcategories ServiceSubcategory[]
+  professionals Professional[]
+  orders        Order[]
+}
+
+// ─── SERVICE SUBCATEGORY ─────────────────────────────────
+
+model ServiceSubcategory {
+  id   Int    @id @default(autoincrement())
+  name String
+  icon String
+
+  categoryId Int
+  category   ServiceCategory @relation(fields: [categoryId], references: [id])
+
+  orders    Order[]
+  favorites FavoriteService[]
+}
+
+// ─── ORDER (Pedido) ──────────────────────────────────────
+
+model Order {
+  id            Int         @id @default(autoincrement())
+  description   String
+  status        OrderStatus @default(PROCURANDO)
+  schedule      ScheduleType @default(NOW)
+  scheduledTime DateTime?
+  address       String
+  price         Float?
+  createdAt     DateTime    @default(now())
+  startedAt     DateTime?
+  completedAt   DateTime?
+  canceledAt    DateTime?
+
+  clientId Int
+  client   User @relation(fields: [clientId], references: [id])
+
+  professionalId Int?
+  professional   Professional? @relation(fields: [professionalId], references: [id])
+
+  categoryId Int
+  category   ServiceCategory @relation(fields: [categoryId], references: [id])
+
+  subcategoryId Int?
+  subcategory   ServiceSubcategory? @relation(fields: [subcategoryId], references: [id])
+
+  review   Review?
+  chat     Chat?
+  messages Message[]
+}
+
+// ─── REVIEW (Avaliação) ──────────────────────────────────
+
+model Review {
+  id      Int    @id @default(autoincrement())
+  rating  Int
+  comment String?
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+
+  orderId Int  @unique
+  order   Order @relation(fields: [orderId], references: [id])
+
+  clientId Int
+  client   User @relation(fields: [clientId], references: [id])
+
+  professionalId Int
+  professional   Professional @relation(fields: [professionalId], references: [id])
+}
+
+// ─── CHAT ───────────────────────────────────────────────
+
+model Chat {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+
+  orderId Int   @unique
+  order   Order @relation(fields: [orderId], references: [id])
+
+  messages Message[]
+}
+
+// ─── MESSAGE (Chat) ──────────────────────────────────────
+
+model Message {
+  id         Int        @id @default(autoincrement())
+  text       String
+  senderType SenderType
+  createdAt  DateTime   @default(now())
+  readAt     DateTime?
+
+  orderId Int
+  order   Order @relation(fields: [orderId], references: [id])
+
+  chatId Int?
+  chat   Chat? @relation(fields: [chatId], references: [id])
+
+  userId Int?
+  user   User? @relation(fields: [userId], references: [id])
+
+  professionalId Int?
+  professional   Professional? @relation(fields: [professionalId], references: [id])
+}
+
+// ─── NOTIFICATION ────────────────────────────────────────
+
+model Notification {
+  id          Int              @id @default(autoincrement())
+  type        NotificationType
+  title       String
+  description String
+  read        Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+}
+
+// ─── ADDRESS (Endereço) ──────────────────────────────────
+
+model Address {
+  id         Int      @id @default(autoincrement())
+  label      String
+  street     String
+  number     String
+  complement String?
+  city       String
+  state      String
+  zipCode    String
+  latitude   Float?
+  longitude  Float?
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+}
+
+// ─── PAYMENT METHOD ──────────────────────────────────────
+
+model PaymentMethod {
+  id         Int         @id @default(autoincrement())
+  type       PaymentType
+  lastDigits String
+  holderName String
+  expiryDate String?
+  isDefault  Boolean     @default(false)
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+}
+
+// ─── FAVORITE SERVICE ────────────────────────────────────
+
+model FavoriteService {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+
+  userId Int
+  user   User @relation(fields: [userId], references: [id])
+
+  subcategoryId Int
+  subcategory   ServiceSubcategory @relation(fields: [subcategoryId], references: [id])
+
+  @@unique([userId, subcategoryId])
+}
+
+// ─── LOGIN ACTIVITY ──────────────────────────────────────
+
+model LoginActivity {
+  id        Int      @id @default(autoincrement())
+  device    String
+  location  String?
+  ipAddress String?
+  loginTime DateTime @default(now())
+  isActive  Boolean  @default(true)
+
+  userId Int?
+  user   User? @relation(fields: [userId], references: [id])
+
+  professionalId Int?
+  professional   Professional? @relation(fields: [professionalId], references: [id])
 }

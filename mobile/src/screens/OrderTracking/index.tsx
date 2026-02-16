@@ -67,68 +67,61 @@ const statusColors: Record<TrackingStatus, string> = {
   FINALIZADO: colors.success,
 };
 
-// Coordenadas mock
-const DESTINATION = { latitude: -23.5505, longitude: -46.6333 };
-const PRO_START = { latitude: -23.5605, longitude: -46.6433 };
+// Coordenadas mock — Manaus
+const DESTINATION = { latitude: -3.1100502, longitude: -60.0244787 }; // Soft Live, R. João Alfredo, 625 - São Geraldo
+const PRO_START = { latitude: -3.1200, longitude: -60.0350 };         // Profissional a caminho
 const INITIAL_ETA = 8; // minutos
 
 const darkMapStyle = [
-  { elementType: 'geometry', stylers: [{ color: '#1d1d1d' }] },
-  { elementType: 'labels.text.fill', stylers: [{ color: '#8a8a8a' }] },
-  { elementType: 'labels.text.stroke', stylers: [{ color: '#1d1d1d' }] },
-  {
-    featureType: 'road',
-    elementType: 'geometry',
-    stylers: [{ color: '#2c2c2c' }],
-  },
-  {
-    featureType: 'road',
-    elementType: 'geometry.stroke',
-    stylers: [{ color: '#383838' }],
-  },
-  {
-    featureType: 'water',
-    elementType: 'geometry',
-    stylers: [{ color: '#0e1626' }],
-  },
-  {
-    featureType: 'poi',
-    elementType: 'geometry',
-    stylers: [{ color: '#1a1a1a' }],
-  },
-  {
-    featureType: 'transit',
-    elementType: 'geometry',
-    stylers: [{ color: '#1a1a1a' }],
-  },
+  { elementType: 'geometry', stylers: [{ color: '#212121' }] },
+  { elementType: 'labels.icon', stylers: [{ visibility: 'off' }] },
+  { elementType: 'labels.text.fill', stylers: [{ color: '#757575' }] },
+  { elementType: 'labels.text.stroke', stylers: [{ color: '#212121' }] },
+  { featureType: 'administrative', elementType: 'geometry', stylers: [{ color: '#757575' }] },
+  { featureType: 'administrative.country', elementType: 'labels.text.fill', stylers: [{ color: '#9e9e9e' }] },
+  { featureType: 'administrative.locality', elementType: 'labels.text.fill', stylers: [{ color: '#bdbdbd' }] },
+  { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+  { featureType: 'road', elementType: 'geometry.fill', stylers: [{ color: '#2c2c2c' }] },
+  { featureType: 'road', elementType: 'labels', stylers: [{ visibility: 'off' }] },
+  { featureType: 'road.arterial', elementType: 'geometry', stylers: [{ color: '#373737' }] },
+  { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#3c3c3c' }] },
+  { featureType: 'road.highway.controlled_access', elementType: 'geometry', stylers: [{ color: '#4e4e4e' }] },
+  { featureType: 'road.local', elementType: 'labels', stylers: [{ visibility: 'off' }] },
+  { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#000000' }] },
+  { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#3d3d3d' }] },
 ];
 
-function interpolate(
+// Busca rota real pelas ruas via OSRM (gratuito, sem API key)
+async function fetchRoadRoute(
   start: { latitude: number; longitude: number },
   end: { latitude: number; longitude: number },
-  t: number,
-) {
-  return {
-    latitude: start.latitude + (end.latitude - start.latitude) * t,
-    longitude: start.longitude + (end.longitude - start.longitude) * t,
-  };
-}
-
-function generateRoute(
-  start: { latitude: number; longitude: number },
-  end: { latitude: number; longitude: number },
-  pointCount: number,
-) {
+): Promise<{ latitude: number; longitude: number }[]> {
+  try {
+    const url = `https://router.project-osrm.org/route/v1/driving/${start.longitude},${start.latitude};${end.longitude},${end.latitude}?overview=full&geometries=geojson`;
+    const res = await fetch(url);
+    const json = await res.json();
+    if (json.routes && json.routes.length > 0) {
+      const coords = json.routes[0].geometry.coordinates;
+      return coords.map((c: [number, number]) => ({ latitude: c[1], longitude: c[0] }));
+    }
+  } catch (err) {
+    console.log('Erro ao buscar rota OSRM:', err);
+  }
+  // Fallback: linha reta
   const points = [];
-  for (let i = 0; i <= pointCount; i++) {
-    points.push(interpolate(start, end, i / pointCount));
+  for (let i = 0; i <= 30; i++) {
+    const t = i / 30;
+    points.push({
+      latitude: start.latitude + (end.latitude - start.latitude) * t,
+      longitude: start.longitude + (end.longitude - start.longitude) * t,
+    });
   }
   return points;
 }
 
 const { height: SCREEN_HEIGHT } = Dimensions.get('window');
 const MAP_HEIGHT = SCREEN_HEIGHT * 0.5;
-const TOTAL_STEPS = 30;
 
 export default function OrderTrackingScreen() {
   const navigation = useNavigation<NavigationProp>();
@@ -141,11 +134,17 @@ export default function OrderTrackingScreen() {
   const [stepIndex, setStepIndex] = useState(0);
   const [orderData, setOrderData] = useState<any>(null);
   const [loadingOrder, setLoadingOrder] = useState(true);
+  const [routePoints, setRoutePoints] = useState<{ latitude: number; longitude: number }[]>([]);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewRating, setReviewRating] = useState(0);
   const [reviewComment, setReviewComment] = useState('');
   const [submittingReview, setSubmittingReview] = useState(false);
   const [reviewSent, setReviewSent] = useState(false);
+
+  // Buscar rota real ao montar
+  useEffect(() => {
+    fetchRoadRoute(PRO_START, DESTINATION).then(setRoutePoints);
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -198,21 +197,28 @@ export default function OrderTrackingScreen() {
     }
   };
 
-  const routePoints = generateRoute(PRO_START, DESTINATION, TOTAL_STEPS);
-
-  // Simulação de movimento do profissional
+  // Simulação de movimento do profissional seguindo ruas
   useEffect(() => {
-    if (!isEnRoute) return;
+    if (!isEnRoute || routePoints.length === 0) return;
+
+    // Amostragem: pegar ~30 pontos igualmente espaçados da rota
+    const totalRoutePoints = routePoints.length;
+    const sampleCount = Math.min(30, totalRoutePoints);
+    const sampledPoints: { latitude: number; longitude: number }[] = [];
+    for (let i = 0; i < sampleCount; i++) {
+      const idx = Math.round((i / (sampleCount - 1)) * (totalRoutePoints - 1));
+      sampledPoints.push(routePoints[idx]);
+    }
 
     // Reset ao entrar em A_CAMINHO
     setStepIndex(0);
-    setProPosition(PRO_START);
+    setProPosition(sampledPoints[0]);
     setEta(INITIAL_ETA);
 
     const interval = setInterval(() => {
       setStepIndex((prev) => {
         const next = prev + 1;
-        if (next >= TOTAL_STEPS) {
+        if (next >= sampledPoints.length) {
           clearInterval(interval);
           // Chegou ao destino -> avança para INICIADO no backend
           setTimeout(async () => {
@@ -224,12 +230,11 @@ export default function OrderTrackingScreen() {
           return prev;
         }
 
-        const newPos = routePoints[next];
-        setProPosition(newPos);
+        setProPosition(sampledPoints[next]);
 
         // ETA proporcional
-        const remaining = TOTAL_STEPS - next;
-        const newEta = Math.max(1, Math.round((remaining / TOTAL_STEPS) * INITIAL_ETA));
+        const remaining = sampledPoints.length - next;
+        const newEta = Math.max(1, Math.round((remaining / sampledPoints.length) * INITIAL_ETA));
         setEta(newEta);
 
         return next;
@@ -237,7 +242,7 @@ export default function OrderTrackingScreen() {
     }, 2000);
 
     return () => clearInterval(interval);
-  }, [isEnRoute]);
+  }, [isEnRoute, routePoints]);
 
   const recenterMap = useCallback(() => {
     if (!mapRef.current) return;
@@ -359,41 +364,61 @@ export default function OrderTrackingScreen() {
         initialRegion={{
           latitude: (PRO_START.latitude + DESTINATION.latitude) / 2,
           longitude: (PRO_START.longitude + DESTINATION.longitude) / 2,
-          latitudeDelta: 0.03,
-          longitudeDelta: 0.03,
+          latitudeDelta: 0.025,
+          longitudeDelta: 0.025,
         }}
         showsUserLocation={false}
         showsMyLocationButton={false}
+        showsCompass={false}
+        showsScale={false}
         toolbarEnabled={false}
+        mapPadding={{ top: 0, right: 0, bottom: 120, left: 0 }}
       >
+        {/* Sombra da rota */}
+        {routePoints.length > 0 && (
+          <Polyline
+            coordinates={routePoints}
+            strokeColor="rgba(0,0,0,0.4)"
+            strokeWidth={8}
+          />
+        )}
+        {/* Rota principal */}
+        {routePoints.length > 0 && (
+          <Polyline
+            coordinates={routePoints}
+            strokeColor={colors.brand}
+            strokeWidth={5}
+          />
+        )}
+
+        {/* Marker do destino */}
+        <Marker coordinate={DESTINATION} anchor={{ x: 0.5, y: 0.5 }}>
+          <View style={styles.destMarkerOuter}>
+            <View style={styles.destMarkerInner} />
+          </View>
+        </Marker>
+
         {/* Marker do profissional */}
         <Marker
           coordinate={proPosition}
           anchor={{ x: 0.5, y: 0.5 }}
         >
-          <View style={styles.proMarker}>
-            <Navigation size={16} color="#fff" />
-          </View>
-        </Marker>
-
-        {/* Marker do destino */}
-        <Marker coordinate={DESTINATION} anchor={{ x: 0.5, y: 1 }}>
-          <View style={styles.destMarkerWrap}>
-            <View style={styles.destMarker}>
-              <MapPin size={16} color={colors.backgroundDark} />
+          <View style={styles.proMarkerOuter}>
+            <View style={styles.proMarker}>
+              <Navigation size={14} color="#000" />
             </View>
-            <View style={styles.destMarkerTail} />
           </View>
         </Marker>
-
-        {/* Rota */}
-        <Polyline
-          coordinates={routePoints}
-          strokeColor={colors.info}
-          strokeWidth={4}
-          lineDashPattern={[8, 6]}
-        />
       </MapView>
+
+      {/* Gradiente superior */}
+      <View style={styles.mapGradientTop} />
+
+      {/* ETA badge flutuante */}
+      <View style={styles.etaFloating}>
+        <Text style={styles.etaFloatingNumber}>{eta}</Text>
+        <Text style={styles.etaFloatingLabel}>min</Text>
+      </View>
 
       {/* Botão recentralizar */}
       <TouchableOpacity
@@ -401,40 +426,46 @@ export default function OrderTrackingScreen() {
         onPress={recenterMap}
         activeOpacity={0.7}
       >
-        <LocateFixed size={20} color={colors.brand} />
+        <LocateFixed size={18} color={colors.textPrimary} />
       </TouchableOpacity>
 
       {/* Card do profissional flutuante */}
-      <TouchableOpacity
-        style={styles.proFloatingCard}
-        activeOpacity={0.7}
-        onPress={() => navigation.navigate('ProfessionalProfile', { professionalId: proId })}
-      >
-        <View style={styles.proFloatingRow}>
-          <View style={styles.avatar}>
-            <UserRound size={24} color={colors.textSecondary} />
+      <View style={styles.proFloatingCard}>
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={() => navigation.navigate('ProfessionalProfile', { professionalId: proId })}
+          style={styles.proFloatingRow}
+        >
+          <View style={styles.proAvatar}>
+            <UserRound size={22} color="#fff" />
           </View>
           <View style={styles.proFloatingInfo}>
-            <Text style={styles.proFloatingName}>{proName}</Text>
+            <Text style={styles.proFloatingName} numberOfLines={1}>{proName}</Text>
             <View style={styles.proFloatingMeta}>
-              <Star size={12} color={colors.brand} fill={colors.brand} />
+              <Star size={11} color={colors.brand} fill={colors.brand} />
               <Text style={styles.proFloatingRating}>{proRating}</Text>
-              <Text style={styles.viewProfileLink}>Ver perfil</Text>
-              <View style={styles.etaBadge}>
-                <Clock size={12} color={colors.info} />
-                <Text style={styles.etaText}>{eta} min</Text>
-              </View>
+              <View style={styles.proFloatingDot} />
+              <Text style={styles.proFloatingService}>{serviceName}</Text>
             </View>
           </View>
+        </TouchableOpacity>
+        <View style={styles.proFloatingActions}>
           <TouchableOpacity
-            style={styles.phoneBtn}
+            style={styles.actionBtn}
             activeOpacity={0.7}
             onPress={() => Alert.alert('Ligar', proPhone || 'Sem telefone')}
           >
-            <Phone size={18} color={colors.brand} />
+            <Phone size={18} color={colors.textPrimary} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.actionBtn}
+            activeOpacity={0.7}
+            onPress={() => navigation.navigate('OrderChat', { orderId: String(orderId) })}
+          >
+            <MessageCircle size={18} color={colors.textPrimary} />
           </TouchableOpacity>
         </View>
-      </TouchableOpacity>
+      </View>
     </View>
   );
 
@@ -693,7 +724,7 @@ export default function OrderTrackingScreen() {
                 <TouchableOpacity
                   style={styles.modalSkipBtn}
                   activeOpacity={0.7}
-                  onPress={() => setShowReviewModal(false)}
+                  onPress={() => { setShowReviewModal(false); navigation.navigate('Tabs'); }}
                 >
                   <Text style={styles.modalSkipText}>Pular</Text>
                 </TouchableOpacity>
@@ -706,9 +737,9 @@ export default function OrderTrackingScreen() {
                 <TouchableOpacity
                   style={styles.modalSubmitBtn}
                   activeOpacity={0.7}
-                  onPress={() => setShowReviewModal(false)}
+                  onPress={() => { setShowReviewModal(false); navigation.navigate('Tabs'); }}
                 >
-                  <Text style={styles.modalSubmitText}>Fechar</Text>
+                  <Text style={styles.modalSubmitText}>Voltar ao início</Text>
                 </TouchableOpacity>
               </>
             )}
@@ -758,61 +789,93 @@ const styles = StyleSheet.create({
   map: {
     flex: 1,
   },
-  proMarker: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.info,
+  mapGradientTop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 40,
+    backgroundColor: 'transparent',
+    borderTopWidth: 0,
+  },
+  proMarkerOuter: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255,193,7,0.2)',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 3,
-    borderColor: '#fff',
-    elevation: 6,
-    shadowColor: colors.info,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.5,
-    shadowRadius: 6,
   },
-  destMarkerWrap: {
-    alignItems: 'center',
-  },
-  destMarker: {
+  proMarker: {
     width: 32,
     height: 32,
     borderRadius: 16,
     backgroundColor: colors.brand,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 3,
-    borderColor: '#fff',
-    elevation: 6,
-    shadowColor: colors.brand,
-    shadowOffset: { width: 0, height: 2 },
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
-    shadowRadius: 4,
+    shadowRadius: 6,
   },
-  destMarkerTail: {
-    width: 3,
-    height: 10,
-    backgroundColor: colors.brand,
-    borderBottomLeftRadius: 2,
-    borderBottomRightRadius: 2,
+  destMarkerOuter: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(226, 25, 25, 0.3)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  destMarkerInner: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: 'red',
+    elevation: 4,
+  },
+  etaFloating: {
+    position: 'absolute',
+    top: 16,
+    left: 16,
+    backgroundColor: colors.surface,
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 3,
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.4,
+    shadowRadius: 5,
+  },
+  etaFloatingNumber: {
+    color: colors.textPrimary,
+    fontSize: 22,
+    fontWeight: '800',
+  },
+  etaFloatingLabel: {
+    color: colors.textSecondary,
+    fontSize: 13,
+    fontWeight: '600',
   },
   recenterBtn: {
     position: 'absolute',
     top: 16,
     right: 16,
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
-    elevation: 4,
+    elevation: 6,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.4,
+    shadowRadius: 5,
   },
 
   // Floating professional card
@@ -822,52 +885,74 @@ const styles = StyleSheet.create({
     left: 16,
     right: 16,
     backgroundColor: colors.surface,
-    borderRadius: 14,
-    padding: 14,
-    elevation: 6,
+    borderRadius: 16,
+    padding: 16,
+    elevation: 10,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.5,
+    shadowRadius: 10,
   },
   proFloatingRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
   },
+  proAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#333',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   proFloatingInfo: {
     flex: 1,
-    gap: 4,
+    gap: 3,
   },
   proFloatingName: {
     color: colors.textPrimary,
-    fontSize: 15,
-    fontWeight: '600',
+    fontSize: 16,
+    fontWeight: '700',
   },
   proFloatingMeta: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 5,
   },
   proFloatingRating: {
     color: colors.brand,
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '700',
   },
-  etaBadge: {
+  proFloatingDot: {
+    width: 3,
+    height: 3,
+    borderRadius: 1.5,
+    backgroundColor: colors.textSecondary,
+  },
+  proFloatingService: {
+    color: colors.textSecondary,
+    fontSize: 13,
+  },
+  proFloatingActions: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.08)',
+    justifyContent: 'center',
+  },
+  actionBtn: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(59, 130, 246, 0.15)',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-    marginLeft: 4,
-  },
-  etaText: {
-    color: colors.info,
-    fontSize: 12,
-    fontWeight: '700',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#2a2a2a',
+    borderRadius: 12,
+    paddingVertical: 12,
   },
 
   // Profissional card (non-map layout)

@@ -167,7 +167,7 @@ export default function HomeScreen() {
         <View style={styles.headerRow}>
           <View>
             <Text style={styles.logo}>Pronto</Text>
-            <Text style={styles.subtitle}>Serviços rápidos com IA</Text>
+            <Text style={styles.subtitle}>Serviços rápidos</Text>
           </View>
           <TouchableOpacity
             style={styles.notificationBtn}

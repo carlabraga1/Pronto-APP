@@ -47,3 +47,4 @@ export class UsersController {
     return this.usersService.deleteAccount(req.user.id);
   }
 }
+

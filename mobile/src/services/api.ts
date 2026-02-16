@@ -2,7 +2,8 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // IP da sua máquina na rede Wi-Fi (celular e PC devem estar na mesma rede)
-const BASE_URL = 'http://192.168.15.7:3000';
+// Altere aqui para o IP da sua máquina ou URL de produção
+export const BASE_URL = 'http://192.168.15.2:3000';
 
 const api = axios.create({
   baseURL: BASE_URL,

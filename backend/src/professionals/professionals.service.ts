@@ -12,6 +12,38 @@ export class ProfessionalsService {
     });
   }
 
+  async syncCategories(
+    categories: { name: string; icon: string; subcategories?: { name: string; icon: string }[] }[],
+  ) {
+    for (const cat of categories) {
+      const category = await this.prisma.serviceCategory.upsert({
+        where: { name: cat.name },
+        update: { icon: cat.icon },
+        create: { name: cat.name, icon: cat.icon },
+      });
+
+      if (cat.subcategories) {
+        for (const sub of cat.subcategories) {
+          const existing = await this.prisma.serviceSubcategory.findFirst({
+            where: { name: sub.name, categoryId: category.id },
+          });
+          if (existing) {
+            await this.prisma.serviceSubcategory.update({
+              where: { id: existing.id },
+              data: { icon: sub.icon },
+            });
+          } else {
+            await this.prisma.serviceSubcategory.create({
+              data: { name: sub.name, icon: sub.icon, categoryId: category.id },
+            });
+          }
+        }
+      }
+    }
+
+    return this.getCategories();
+  }
+
   async findAll(category?: string) {
     return this.prisma.professional.findMany({
       where: {

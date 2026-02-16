@@ -1,4 +1,4 @@
-import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, ParseIntPipe, Query } from '@nestjs/common';
 import { ProfessionalsService } from './professionals.service';
 
 @Controller()
@@ -8,6 +8,11 @@ export class ProfessionalsController {
   @Get('categories')
   getCategories() {
     return this.professionalsService.getCategories();
+  }
+
+  @Post('categories/sync')
+  syncCategories(@Body() categories: { name: string; icon: string; subcategories?: { name: string; icon: string }[] }[]) {
+    return this.professionalsService.syncCategories(categories);
   }
 
   @Get('professionals')

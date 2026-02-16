@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RequestsService } from './requests.service';
-import { CreateRequestDto, UpdateStatusDto, AssignProfessionalDto } from './dto/create-request.dto';
+import { CreateRequestDto, UpdateStatusDto, AssignProfessionalDto, CreateReviewDto } from './dto/create-request.dto';
 
 @UseGuards(JwtAuthGuard)
 @Controller('requests')
@@ -38,6 +38,15 @@ export class RequestsController {
     @Body() dto: UpdateStatusDto,
   ) {
     return this.requestsService.updateStatus(id, dto);
+  }
+
+  @Post(':id/review')
+  createReview(
+    @Req() req: any,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() dto: CreateReviewDto,
+  ) {
+    return this.requestsService.createReview(req.user.id, id, dto);
   }
 
   @Get(':id')

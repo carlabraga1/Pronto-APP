@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -12,34 +13,32 @@ import {
   ChevronRight,
   Clock,
   Wrench,
-  Zap,
-  Scissors,
 } from 'lucide-react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../../@types/navigation';
 import { colors } from '../../constants/colors';
+import api from '../../services/api';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
-type OrderStatus = 'PROCURANDO' | 'ACEITO' | 'A_CAMINHO' | 'INICIADO' | 'FINALIZADO' | 'CANCELADO';
+type OrderStatus = 'PROCURANDO' | 'AGUARDANDO' | 'ACEITO' | 'A_CAMINHO' | 'INICIADO' | 'FINALIZADO' | 'CANCELADO';
 
 export type Order = {
-  id: string;
-  service: string;
-  professional: string;
-  date: string;
-  time: string;
+  id: number;
+  description: string;
   status: OrderStatus;
-  price: string;
   address: string;
-  phone: string;
-  rating: number;
-  icon: typeof Wrench;
+  price: number | null;
+  createdAt: string;
+  category: { id: number; name: string } | null;
+  subcategory: { id: number; name: string } | null;
+  professional: { id: number; name: string; rating: number } | null;
 };
 
 const statusConfig: Record<OrderStatus, { label: string; color: string; bg: string }> = {
   PROCURANDO: { label: 'Procurando', color: colors.brand, bg: 'rgba(255,193,7,0.15)' },
+  AGUARDANDO: { label: 'Aguardando', color: colors.brand, bg: 'rgba(255,193,7,0.15)' },
   ACEITO: { label: 'Aceito', color: colors.success, bg: 'rgba(76,175,80,0.15)' },
   A_CAMINHO: { label: 'A caminho', color: colors.info, bg: 'rgba(59,130,246,0.15)' },
   INICIADO: { label: 'Iniciado', color: colors.success, bg: 'rgba(76,175,80,0.15)' },
@@ -47,88 +46,62 @@ const statusConfig: Record<OrderStatus, { label: string; color: string; bg: stri
   CANCELADO: { label: 'Cancelado', color: colors.danger, bg: 'rgba(239,68,68,0.15)' },
 };
 
-export const mockOrders: Order[] = [
-  {
-    id: '1',
-    service: 'Eletricista',
-    professional: 'João Silva',
-    date: '11 fev 2026',
-    time: '14:00',
-    status: 'PROCURANDO',
-    price: 'R$ 150,00',
-    address: 'Rua das Flores, 123 - São Paulo',
-    phone: '+55 (11) 98888-7777',
-    rating: 4.8,
-    icon: Zap,
-  },
-  {
-    id: '2',
-    service: 'Encanador',
-    professional: 'Pedro Santos',
-    date: '11 fev 2026',
-    time: '10:00',
-    status: 'A_CAMINHO',
-    price: 'R$ 200,00',
-    address: 'Rua das Flores, 123 - São Paulo',
-    phone: '+55 (11) 97777-6666',
-    rating: 4.9,
-    icon: Wrench,
-  },
-  {
-    id: '3',
-    service: 'Cabeleireiro',
-    professional: 'Ana Costa',
-    date: '09 fev 2026',
-    time: '16:00',
-    status: 'FINALIZADO',
-    price: 'R$ 80,00',
-    address: 'Av. Paulista, 1000 - São Paulo',
-    phone: '+55 (11) 96666-5555',
-    rating: 5.0,
-    icon: Scissors,
-  },
-  {
-    id: '4',
-    service: 'Eletricista',
-    professional: 'Carlos Mendes',
-    date: '05 fev 2026',
-    time: '09:00',
-    status: 'FINALIZADO',
-    price: 'R$ 120,00',
-    address: 'Rua Augusta, 500 - São Paulo',
-    phone: '+55 (11) 95555-4444',
-    rating: 4.7,
-    icon: Zap,
-  },
-  {
-    id: '5',
-    service: 'Encanador',
-    professional: 'Ricardo Lima',
-    date: '01 fev 2026',
-    time: '11:00',
-    status: 'CANCELADO',
-    price: 'R$ 180,00',
-    address: 'Rua Oscar Freire, 200 - São Paulo',
-    phone: '+55 (11) 94444-3333',
-    rating: 4.5,
-    icon: Wrench,
-  },
-];
+export { statusConfig };
 
 type Tab = 'ativos' | 'historico';
+
+function formatDate(dateStr: string) {
+  const d = new Date(dateStr);
+  const day = d.getDate().toString().padStart(2, '0');
+  const months = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+  const month = months[d.getMonth()];
+  const year = d.getFullYear();
+  const time = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+  return { date: `${day} ${month} ${year}`, time };
+}
 
 export default function OrdersScreen() {
   const navigation = useNavigation<NavigationProp>();
   const [activeTab, setActiveTab] = useState<Tab>('ativos');
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const activeOrders = mockOrders.filter(
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      (async () => {
+        try {
+          const { data } = await api.get('/requests?me=1');
+          if (active) setOrders(data);
+        } catch (err) {
+          console.log('Erro ao buscar pedidos:', err);
+        } finally {
+          if (active) setLoading(false);
+        }
+      })();
+      return () => { active = false; };
+    }, [])
+  );
+
+  const activeOrders = orders.filter(
     (o) => o.status !== 'FINALIZADO' && o.status !== 'CANCELADO',
   );
-  const historyOrders = mockOrders.filter(
+  const historyOrders = orders.filter(
     (o) => o.status === 'FINALIZADO' || o.status === 'CANCELADO',
   );
 
-  const orders = activeTab === 'ativos' ? activeOrders : historyOrders;
+  const displayOrders = activeTab === 'ativos' ? activeOrders : historyOrders;
+
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container} edges={['top']}>
+        <Text style={styles.title}>Meus Pedidos</Text>
+        <View style={styles.empty}>
+          <ActivityIndicator size="large" color={colors.brand} />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -167,7 +140,7 @@ export default function OrdersScreen() {
       </View>
 
       {/* Lista de pedidos */}
-      {orders.length === 0 ? (
+      {displayOrders.length === 0 ? (
         <View style={styles.empty}>
           <ClipboardList size={48} color={colors.textSecondary} />
           <Text style={styles.emptyText}>
@@ -186,26 +159,30 @@ export default function OrdersScreen() {
           showsVerticalScrollIndicator={false}
           contentContainerStyle={styles.list}
         >
-          {orders.map((order) => {
-            const Icon = order.icon;
+          {displayOrders.map((order) => {
             const status = statusConfig[order.status];
+            const { date, time } = formatDate(order.createdAt);
             return (
               <TouchableOpacity
                 key={order.id}
                 style={styles.card}
                 activeOpacity={0.7}
-                onPress={() => navigation.navigate('OrderDetail', { orderId: order.id })}
+                onPress={() => navigation.navigate('OrderDetail', { orderId: String(order.id) })}
               >
                 <View style={[styles.statusBar, { backgroundColor: status.color }]} />
                 <View style={styles.cardContent}>
                   <View style={styles.cardTop}>
                     <View style={styles.serviceRow}>
                       <View style={styles.serviceIcon}>
-                        <Icon size={20} color={colors.brand} />
+                        <Wrench size={20} color={colors.brand} />
                       </View>
                       <View style={styles.serviceInfo}>
-                        <Text style={styles.serviceName}>{order.service}</Text>
-                        <Text style={styles.professionalName}>{order.professional}</Text>
+                        <Text style={styles.serviceName}>
+                          {order.category?.name || 'Serviço'}
+                        </Text>
+                        <Text style={styles.professionalName}>
+                          {order.professional?.name || 'Aguardando profissional'}
+                        </Text>
                       </View>
                     </View>
                     <ChevronRight size={18} color={colors.textSecondary} />
@@ -215,7 +192,7 @@ export default function OrdersScreen() {
                     <View style={styles.dateRow}>
                       <Clock size={14} color={colors.textSecondary} />
                       <Text style={styles.dateText}>
-                        {order.date} às {order.time}
+                        {date} às {time}
                       </Text>
                     </View>
                     <View style={[styles.badge, { backgroundColor: status.bg }]}>
@@ -247,8 +224,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     paddingVertical: 16,
   },
-
-  // Tabs
   tabsContainer: {
     flexDirection: 'row',
     backgroundColor: colors.surface,
@@ -273,8 +248,6 @@ const styles = StyleSheet.create({
   tabTextActive: {
     color: colors.backgroundDark,
   },
-
-  // Empty
   empty: {
     flex: 1,
     alignItems: 'center',
@@ -290,13 +263,9 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontSize: 14,
   },
-
-  // List
   list: {
     gap: 12,
   },
-
-  // Card
   card: {
     backgroundColor: colors.surface,
     borderRadius: 14,

@@ -53,69 +53,7 @@ const typeConfig: Record<
   },
 };
 
-const mockNotifications: Notification[] = [
-  {
-    id: '1',
-    type: 'order',
-    title: 'Profissional a caminho',
-    description: 'João Silva está a caminho para o serviço de Eletricista.',
-    timestamp: 'Agora',
-    read: false,
-    orderId: '1',
-  },
-  {
-    id: '2',
-    type: 'chat',
-    title: 'Nova mensagem de Pedro Santos',
-    description: 'Vou precisar de acesso ao quadro de energia...',
-    timestamp: '5 min',
-    read: false,
-    orderId: '2',
-  },
-  {
-    id: '3',
-    type: 'promo',
-    title: '20% OFF em Limpeza Residencial',
-    description: 'Aproveite o desconto exclusivo válido até sexta-feira!',
-    timestamp: '30 min',
-    read: false,
-  },
-  {
-    id: '4',
-    type: 'order',
-    title: 'Pedido finalizado',
-    description: 'O serviço de Cabeleireiro com Ana Costa foi concluído.',
-    timestamp: '2h',
-    read: true,
-    orderId: '3',
-  },
-  {
-    id: '5',
-    type: 'chat',
-    title: 'Mensagem de Ana Costa',
-    description: 'Obrigada pela avaliação! Até a próxima.',
-    timestamp: '3h',
-    read: true,
-    orderId: '3',
-  },
-  {
-    id: '6',
-    type: 'promo',
-    title: 'Novidade: Serviços de Jardinagem',
-    description: 'Agora você pode contratar jardineiros pelo Pronto!',
-    timestamp: 'Ontem',
-    read: true,
-  },
-  {
-    id: '7',
-    type: 'order',
-    title: 'Pedido cancelado',
-    description: 'O serviço de Encanador com Ricardo Lima foi cancelado.',
-    timestamp: 'Ontem',
-    read: true,
-    orderId: '5',
-  },
-];
+const notifications: Notification[] = [];
 
 export default function NotificationsScreen() {
   const navigation = useNavigation<any>();
@@ -183,11 +121,11 @@ export default function NotificationsScreen() {
       </View>
 
       <FlatList
-        data={mockNotifications}
+        data={notifications}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
         contentContainerStyle={
-          mockNotifications.length === 0 ? styles.emptyContainer : styles.list
+          notifications.length === 0 ? styles.emptyContainer : styles.list
         }
         ListEmptyComponent={renderEmpty}
         showsVerticalScrollIndicator={false}

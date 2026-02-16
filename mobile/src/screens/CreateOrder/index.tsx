@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   TextInput,
   ScrollView,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -21,7 +22,8 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import type { RootStackParamList } from '../../@types/navigation';
 import { colors } from '../../constants/colors';
-import { categories } from '../../constants/categories';
+import { getIcon } from '../../constants/iconMap';
+import { getCurrentLocation } from '../../services/location';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 type CreateOrderRoute = RouteProp<RootStackParamList, 'CreateOrder'>;
@@ -33,15 +35,21 @@ const timeSlots = ['08:00', '09:00', '10:00', '11:00', '14:00', '15:00', '16:00'
 export default function CreateOrderScreen() {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<CreateOrderRoute>();
-  const { service, categoryId } = route.params;
-
-  const category = categories.find((c) => c.id === categoryId);
-  const CategoryIcon = category?.icon;
+  const { service, categoryId, categoryName, categoryIcon, subcategoryId } = route.params;
 
   const [description, setDescription] = useState('');
-  const [address] = useState('Rua das Flores, 123 - São Paulo');
+  const [address, setAddress] = useState('');
+  const [loadingAddress, setLoadingAddress] = useState(true);
   const [schedule, setSchedule] = useState<Schedule>('now');
   const [selectedTime, setSelectedTime] = useState('');
+
+  useEffect(() => {
+    (async () => {
+      const result = await getCurrentLocation();
+      setAddress(result.address);
+      setLoadingAddress(false);
+    })();
+  }, []);
 
   const canProceed = description.trim().length > 0;
 
@@ -52,6 +60,9 @@ export default function CreateOrderScreen() {
       description: description.trim(),
       address,
       schedule: scheduleText,
+      categoryId,
+      categoryName,
+      subcategoryId,
     });
   };
 
@@ -73,7 +84,7 @@ export default function CreateOrderScreen() {
         {/* Serviço selecionado */}
         <View style={styles.serviceCard}>
           <View style={styles.serviceIcon}>
-            {CategoryIcon && <CategoryIcon size={24} color={colors.brand} />}
+            {(() => { const Icon = getIcon(categoryIcon); return <Icon size={24} color={colors.brand} />; })()}
           </View>
           <View style={styles.serviceInfo}>
             <Text style={styles.serviceLabel}>Serviço</Text>
@@ -108,7 +119,11 @@ export default function CreateOrderScreen() {
             onPress={() => navigation.navigate('Location')}
           >
             <MapPin size={18} color={colors.brand} />
-            <Text style={styles.addressText} numberOfLines={1}>{address}</Text>
+            {loadingAddress ? (
+              <ActivityIndicator size="small" color={colors.brand} style={{ flex: 1 }} />
+            ) : (
+              <Text style={styles.addressText} numberOfLines={1}>{address}</Text>
+            )}
             <ChevronRight size={18} color={colors.textSecondary} />
           </TouchableOpacity>
         </View>
@@ -223,6 +238,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.backgroundDark,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  serviceIconImg: {
+    width: 24,
   },
   serviceInfo: {
     gap: 2,

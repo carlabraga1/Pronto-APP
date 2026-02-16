@@ -49,7 +49,11 @@ export default function ProfileScreen() {
   }, [fetchProfile]);
 
   const handleMenuItem = (label: string) => {
-    Alert.alert(label, `Navegar para ${label}`);
+    if (label === 'Notificações') {
+      navigation.navigate('Notifications');
+    } else {
+      Alert.alert(label, 'Em breve');
+    }
   };
 
   const handleLogout = () => {

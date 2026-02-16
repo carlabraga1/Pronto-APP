@@ -32,3 +32,12 @@ export class AssignProfessionalDto {
   @IsInt()
   professionalId: number;
 }
+
+export class CreateReviewDto {
+  @IsInt()
+  rating: number;
+
+  @IsOptional()
+  @IsString()
+  comment?: string;
+}

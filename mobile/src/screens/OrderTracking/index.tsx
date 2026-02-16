@@ -7,9 +7,13 @@ import {
   ScrollView,
   Alert,
   Dimensions,
+  ActivityIndicator,
+  Modal,
+  TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Platform } from 'react-native';
+import api from '../../services/api';
 
 let MapView: any = View;
 let Marker: any = View;
@@ -38,28 +42,28 @@ import {
   Clock,
   MessageCircle,
 } from 'lucide-react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../../@types/navigation';
 import { colors } from '../../constants/colors';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
-type TrackingStatus = 'PROCURANDO' | 'AGUARDANDO' | 'ACEITO' | 'A_CAMINHO' | 'FINALIZADO';
+type TrackingStatus = 'PROCURANDO' | 'ACEITO' | 'A_CAMINHO' | 'INICIADO' | 'FINALIZADO';
 
 const steps: { status: TrackingStatus; label: string; icon: typeof Search }[] = [
   { status: 'PROCURANDO', label: 'Procurando profissional', icon: Search },
-  { status: 'AGUARDANDO', label: 'Aguardando aceitação', icon: Clock },
   { status: 'ACEITO', label: 'Profissional aceitou', icon: ThumbsUp },
   { status: 'A_CAMINHO', label: 'A caminho', icon: Truck },
+  { status: 'INICIADO', label: 'Serviço iniciado', icon: Clock },
   { status: 'FINALIZADO', label: 'Finalizado', icon: Flag },
 ];
 
 const statusColors: Record<TrackingStatus, string> = {
   PROCURANDO: colors.brand,
-  AGUARDANDO: colors.brand,
   ACEITO: colors.success,
   A_CAMINHO: colors.info,
+  INICIADO: colors.info,
   FINALIZADO: colors.success,
 };
 
@@ -128,24 +132,73 @@ const TOTAL_STEPS = 30;
 
 export default function OrderTrackingScreen() {
   const navigation = useNavigation<NavigationProp>();
+  const route = useRoute<any>();
+  const { orderId } = route.params;
   const mapRef = useRef<MapView>(null);
   const [currentStatus, setCurrentStatus] = useState<TrackingStatus>('PROCURANDO');
   const [proPosition, setProPosition] = useState(PRO_START);
   const [eta, setEta] = useState(INITIAL_ETA);
   const [stepIndex, setStepIndex] = useState(0);
+  const [orderData, setOrderData] = useState<any>(null);
+  const [loadingOrder, setLoadingOrder] = useState(true);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewComment, setReviewComment] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
+  const [reviewSent, setReviewSent] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data } = await api.get(`/requests/${orderId}`);
+        setOrderData(data);
+        if (data.status && steps.some((s: any) => s.status === data.status)) {
+          setCurrentStatus(data.status);
+        }
+      } catch (err) {
+        console.log('Erro ao buscar pedido:', err);
+      } finally {
+        setLoadingOrder(false);
+      }
+    })();
+  }, []);
 
   const currentIndex = steps.findIndex((s) => s.status === currentStatus);
   const isFinished = currentStatus === 'FINALIZADO';
   const isEnRoute = currentStatus === 'A_CAMINHO';
   const isAccepted = currentStatus === 'ACEITO';
 
-  const routePoints = generateRoute(PRO_START, DESTINATION, TOTAL_STEPS);
-
-  const advanceStatus = () => {
+  const advanceStatus = async () => {
     if (currentIndex < steps.length - 1) {
-      setCurrentStatus(steps[currentIndex + 1].status);
+      const nextStatus = steps[currentIndex + 1].status;
+      try {
+        await api.patch(`/requests/${orderId}/status`, { status: nextStatus });
+        setCurrentStatus(nextStatus);
+        if (nextStatus === 'FINALIZADO') setShowReviewModal(true);
+      } catch (err: any) {
+        Alert.alert('Erro', err?.response?.data?.message || 'Não foi possível avançar status');
+      }
     }
   };
+
+  const handleSubmitReview = async () => {
+    if (reviewRating === 0) return;
+    setSubmittingReview(true);
+    try {
+      await api.post(`/requests/${orderId}/review`, {
+        rating: reviewRating,
+        comment: reviewComment.trim() || undefined,
+      });
+      setReviewSent(true);
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || 'Erro ao enviar avaliação';
+      Alert.alert('Erro', msg);
+    } finally {
+      setSubmittingReview(false);
+    }
+  };
+
+  const routePoints = generateRoute(PRO_START, DESTINATION, TOTAL_STEPS);
 
   // Simulação de movimento do profissional
   useEffect(() => {
@@ -161,8 +214,13 @@ export default function OrderTrackingScreen() {
         const next = prev + 1;
         if (next >= TOTAL_STEPS) {
           clearInterval(interval);
-          // Chegou ao destino -> avança para INICIADO
-          setTimeout(() => setCurrentStatus('INICIADO'), 500);
+          // Chegou ao destino -> avança para INICIADO no backend
+          setTimeout(async () => {
+            try {
+              await api.patch(`/requests/${orderId}/status`, { status: 'INICIADO' });
+            } catch {}
+            setCurrentStatus('INICIADO');
+          }, 500);
           return prev;
         }
 
@@ -205,14 +263,26 @@ export default function OrderTrackingScreen() {
         {
           text: 'Cancelar pedido',
           style: 'destructive',
-          onPress: () => {
-            Alert.alert('Pedido cancelado', 'Seu pedido foi cancelado.');
-            navigation.goBack();
+          onPress: async () => {
+            try {
+              await api.patch(`/requests/${orderId}/status`, { status: 'CANCELADO' });
+              Alert.alert('Pedido cancelado', 'Seu pedido foi cancelado.');
+              navigation.goBack();
+            } catch (err: any) {
+              Alert.alert('Erro', err.response?.data?.message || 'Não foi possível cancelar');
+            }
           },
         },
       ],
     );
   };
+
+  const proName = orderData?.professional?.name || 'Aguardando...';
+  const proRating = orderData?.professional?.rating?.toFixed(1) || '0.0';
+  const proId = orderData?.professional?.id ? String(orderData.professional.id) : '1';
+  const proPhone = orderData?.professional?.phoneNumber || '';
+  const serviceName = orderData?.category?.name || 'Serviço';
+  const orderAddress = orderData?.address || 'Endereço';
 
   const renderTimeline = () => (
     <View style={styles.timeline}>
@@ -265,12 +335,12 @@ export default function OrderTrackingScreen() {
               >
                 {step.label}
               </Text>
-              {isCurrent && (
+              {isCurrent && step.status !== 'FINALIZADO' && (
                 <Text style={[styles.timelineStatus, { color: stepColor }]}>
                   Em progresso...
                 </Text>
               )}
-              {isPast && (
+              {(isPast || (isCurrent && step.status === 'FINALIZADO')) && (
                 <Text style={styles.timelineDone}>Concluído</Text>
               )}
             </View>
@@ -338,17 +408,17 @@ export default function OrderTrackingScreen() {
       <TouchableOpacity
         style={styles.proFloatingCard}
         activeOpacity={0.7}
-        onPress={() => navigation.navigate('ProfessionalProfile', { professionalId: '1' })}
+        onPress={() => navigation.navigate('ProfessionalProfile', { professionalId: proId })}
       >
         <View style={styles.proFloatingRow}>
           <View style={styles.avatar}>
             <UserRound size={24} color={colors.textSecondary} />
           </View>
           <View style={styles.proFloatingInfo}>
-            <Text style={styles.proFloatingName}>João Silva</Text>
+            <Text style={styles.proFloatingName}>{proName}</Text>
             <View style={styles.proFloatingMeta}>
               <Star size={12} color={colors.brand} fill={colors.brand} />
-              <Text style={styles.proFloatingRating}>4.9</Text>
+              <Text style={styles.proFloatingRating}>{proRating}</Text>
               <Text style={styles.viewProfileLink}>Ver perfil</Text>
               <View style={styles.etaBadge}>
                 <Clock size={12} color={colors.info} />
@@ -359,7 +429,7 @@ export default function OrderTrackingScreen() {
           <TouchableOpacity
             style={styles.phoneBtn}
             activeOpacity={0.7}
-            onPress={() => Alert.alert('Ligar', '+55 (11) 98888-7777')}
+            onPress={() => Alert.alert('Ligar', proPhone || 'Sem telefone')}
           >
             <Phone size={18} color={colors.brand} />
           </TouchableOpacity>
@@ -402,28 +472,32 @@ export default function OrderTrackingScreen() {
               <View style={styles.infoCard}>
                 <View style={styles.infoItem}>
                   <Text style={styles.infoLabel}>Serviço</Text>
-                  <Text style={styles.infoValue}>Eletricista</Text>
+                  <Text style={styles.infoValue}>{serviceName}</Text>
                 </View>
                 <View style={[styles.infoItem, styles.infoBorder]}>
                   <Text style={styles.infoLabel}>Endereço</Text>
-                  <Text style={styles.infoValue}>Rua das Flores, 123 - São Paulo</Text>
+                  <Text style={styles.infoValue}>{orderAddress}</Text>
                 </View>
                 <View style={[styles.infoItem, styles.infoBorder]}>
                   <Text style={styles.infoLabel}>Valor estimado</Text>
-                  <Text style={styles.priceValue}>R$ 80,00/h</Text>
+                  <Text style={styles.priceValue}>
+                  {orderData?.price ? `R$ ${orderData.price.toFixed(2).replace('.', ',')}` : 'A combinar'}
+                </Text>
                 </View>
               </View>
             </View>
 
-            {/* Botão dev para simular avanço */}
-            <TouchableOpacity
-              style={styles.devBtn}
-              activeOpacity={0.7}
-              onPress={advanceStatus}
-            >
-              <ChevronRight size={16} color={colors.brand} />
-              <Text style={styles.devBtnText}>Simular próximo status</Text>
-            </TouchableOpacity>
+            {/* Simular próximo status */}
+            {!isFinished && (
+              <TouchableOpacity
+                style={styles.simulateBtn}
+                activeOpacity={0.7}
+                onPress={advanceStatus}
+              >
+                <ChevronRight size={16} color={colors.brand} />
+                <Text style={styles.simulateBtnText}>Simular próximo status</Text>
+              </TouchableOpacity>
+            )}
 
             {/* Cancelar */}
             <TouchableOpacity
@@ -444,23 +518,23 @@ export default function OrderTrackingScreen() {
           <TouchableOpacity
             style={styles.professionalCard}
             activeOpacity={0.7}
-            onPress={() => navigation.navigate('ProfessionalProfile', { professionalId: '1' })}
+            onPress={() => navigation.navigate('ProfessionalProfile', { professionalId: proId })}
           >
             <View style={styles.proRow}>
               <View style={styles.avatar}>
                 <UserRound size={28} color={colors.textSecondary} />
               </View>
               <View style={styles.proInfo}>
-                <Text style={styles.proName}>João Silva</Text>
+                <Text style={styles.proName}>{proName}</Text>
                 <View style={styles.ratingRow}>
                   <Star size={14} color={colors.brand} fill={colors.brand} />
-                  <Text style={styles.ratingText}>4.9</Text>
+                  <Text style={styles.ratingText}>{proRating}</Text>
                 </View>
               </View>
               <TouchableOpacity
                 style={styles.phoneBtn}
                 activeOpacity={0.7}
-                onPress={() => Alert.alert('Ligar', '+55 (11) 98888-7777')}
+                onPress={() => Alert.alert('Ligar', proPhone || 'Sem telefone')}
               >
                 <Phone size={18} color={colors.brand} />
               </TouchableOpacity>
@@ -482,7 +556,7 @@ export default function OrderTrackingScreen() {
             <TouchableOpacity
               style={styles.chatBtn}
               activeOpacity={0.7}
-              onPress={() => navigation.navigate('OrderChat', { orderId: 'mock-1' })}
+              onPress={() => navigation.navigate('OrderChat', { orderId: String(orderId) })}
             >
               <MessageCircle size={20} color={colors.backgroundDark} />
               <Text style={styles.chatBtnText}>Abrir Chat</Text>
@@ -495,11 +569,11 @@ export default function OrderTrackingScreen() {
             <View style={styles.infoCard}>
               <View style={styles.infoItem}>
                 <Text style={styles.infoLabel}>Serviço</Text>
-                <Text style={styles.infoValue}>Eletricista</Text>
+                <Text style={styles.infoValue}>{serviceName}</Text>
               </View>
               <View style={[styles.infoItem, styles.infoBorder]}>
                 <Text style={styles.infoLabel}>Endereço</Text>
-                <Text style={styles.infoValue}>Rua das Flores, 123 - São Paulo</Text>
+                <Text style={styles.infoValue}>{orderAddress}</Text>
               </View>
               <View style={[styles.infoItem, styles.infoBorder]}>
                 <Text style={styles.infoLabel}>Horário</Text>
@@ -507,20 +581,22 @@ export default function OrderTrackingScreen() {
               </View>
               <View style={[styles.infoItem, styles.infoBorder]}>
                 <Text style={styles.infoLabel}>Valor estimado</Text>
-                <Text style={styles.priceValue}>R$ 80,00/h</Text>
+                <Text style={styles.priceValue}>
+                  {orderData?.price ? `R$ ${orderData.price.toFixed(2).replace('.', ',')}` : 'A combinar'}
+                </Text>
               </View>
             </View>
           </View>
 
-          {/* Botão dev para simular avanço */}
+          {/* Simular próximo status */}
           {!isFinished && (
             <TouchableOpacity
-              style={styles.devBtn}
+              style={styles.simulateBtn}
               activeOpacity={0.7}
               onPress={advanceStatus}
             >
               <ChevronRight size={16} color={colors.brand} />
-              <Text style={styles.devBtnText}>Simular próximo status</Text>
+              <Text style={styles.simulateBtnText}>Simular próximo status</Text>
             </TouchableOpacity>
           )}
 
@@ -541,12 +617,104 @@ export default function OrderTrackingScreen() {
               <Flag size={24} color={colors.success} />
               <Text style={styles.finishedText}>Serviço finalizado!</Text>
               <Text style={styles.finishedSub}>Obrigado por usar o Pronto</Text>
+              {!reviewSent && (
+                <TouchableOpacity
+                  style={styles.reviewOpenBtn}
+                  activeOpacity={0.7}
+                  onPress={() => setShowReviewModal(true)}
+                >
+                  <Star size={18} color={colors.backgroundDark} />
+                  <Text style={styles.reviewOpenBtnText}>Avaliar profissional</Text>
+                </TouchableOpacity>
+              )}
+              {reviewSent && (
+                <Text style={styles.reviewSentText}>Avaliação enviada!</Text>
+              )}
             </View>
           )}
 
           <View style={{ height: 30 }} />
         </ScrollView>
       )}
+
+      {/* Modal de avaliação */}
+      <Modal
+        visible={showReviewModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowReviewModal(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            {!reviewSent ? (
+              <>
+                <Text style={styles.modalTitle}>Avalie o profissional</Text>
+                <Text style={styles.modalSubtitle}>{proName}</Text>
+
+                <View style={styles.starsRow}>
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <TouchableOpacity
+                      key={n}
+                      activeOpacity={0.7}
+                      onPress={() => setReviewRating(n)}
+                    >
+                      <Star
+                        size={36}
+                        color={colors.brand}
+                        fill={n <= reviewRating ? colors.brand : 'transparent'}
+                      />
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                <TextInput
+                  style={styles.modalInput}
+                  placeholder="Deixe um comentário (opcional)"
+                  placeholderTextColor={colors.textSecondary}
+                  value={reviewComment}
+                  onChangeText={setReviewComment}
+                  multiline
+                  maxLength={300}
+                />
+
+                <TouchableOpacity
+                  style={[styles.modalSubmitBtn, reviewRating === 0 && styles.modalSubmitBtnDisabled]}
+                  activeOpacity={0.7}
+                  onPress={handleSubmitReview}
+                  disabled={reviewRating === 0 || submittingReview}
+                >
+                  {submittingReview ? (
+                    <ActivityIndicator color={colors.backgroundDark} />
+                  ) : (
+                    <Text style={styles.modalSubmitText}>Enviar avaliação</Text>
+                  )}
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.modalSkipBtn}
+                  activeOpacity={0.7}
+                  onPress={() => setShowReviewModal(false)}
+                >
+                  <Text style={styles.modalSkipText}>Pular</Text>
+                </TouchableOpacity>
+              </>
+            ) : (
+              <>
+                <Star size={48} color={colors.brand} fill={colors.brand} />
+                <Text style={styles.modalTitle}>Obrigado!</Text>
+                <Text style={styles.modalSubtitle}>Sua avaliação ajuda a melhorar o Pronto</Text>
+                <TouchableOpacity
+                  style={styles.modalSubmitBtn}
+                  activeOpacity={0.7}
+                  onPress={() => setShowReviewModal(false)}
+                >
+                  <Text style={styles.modalSubmitText}>Fechar</Text>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -862,25 +1030,6 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 
-  // Dev button
-  devBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    borderWidth: 1,
-    borderColor: colors.brand,
-    borderRadius: 10,
-    paddingVertical: 10,
-    marginBottom: 12,
-    borderStyle: 'dashed',
-  },
-  devBtnText: {
-    color: colors.brand,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-
   // Chat button
   chatBtn: {
     flexDirection: 'row',
@@ -896,6 +1045,25 @@ const styles = StyleSheet.create({
     color: colors.backgroundDark,
     fontSize: 16,
     fontWeight: '700',
+  },
+
+  // Simulate button
+  simulateBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    borderWidth: 1,
+    borderColor: colors.brand,
+    borderRadius: 10,
+    paddingVertical: 10,
+    marginBottom: 12,
+    borderStyle: 'dashed',
+  },
+  simulateBtnText: {
+    color: colors.brand,
+    fontSize: 13,
+    fontWeight: '600',
   },
 
   // Cancel
@@ -924,6 +1092,94 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   finishedSub: {
+    color: colors.textSecondary,
+    fontSize: 14,
+  },
+  reviewOpenBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: colors.brand,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    marginTop: 16,
+  },
+  reviewOpenBtnText: {
+    color: colors.backgroundDark,
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  reviewSentText: {
+    color: colors.brand,
+    fontSize: 14,
+    fontWeight: '600',
+    marginTop: 12,
+  },
+
+  // Modal de avaliação
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+  modalContent: {
+    width: '100%',
+    backgroundColor: colors.surface,
+    borderRadius: 20,
+    padding: 24,
+    alignItems: 'center',
+    gap: 12,
+  },
+  modalTitle: {
+    color: colors.textPrimary,
+    fontSize: 20,
+    fontWeight: '700',
+  },
+  modalSubtitle: {
+    color: colors.textSecondary,
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  starsRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginVertical: 8,
+  },
+  modalInput: {
+    width: '100%',
+    backgroundColor: colors.backgroundDark,
+    borderRadius: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    color: colors.textPrimary,
+    fontSize: 14,
+    minHeight: 80,
+    textAlignVertical: 'top',
+  },
+  modalSubmitBtn: {
+    width: '100%',
+    backgroundColor: colors.brand,
+    borderRadius: 14,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  modalSubmitBtnDisabled: {
+    opacity: 0.4,
+  },
+  modalSubmitText: {
+    color: colors.backgroundDark,
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  modalSkipBtn: {
+    paddingVertical: 8,
+  },
+  modalSkipText: {
     color: colors.textSecondary,
     fontSize: 14,
   },

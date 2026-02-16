@@ -8,16 +8,19 @@ export type AuthStackParamList = {
 export type RootStackParamList = {
   Tabs: { address?: string };
   Location: undefined;
-  SubCategory: { categoryId: string };
+  SubCategory: { categoryId: number; categoryName: string; categoryIcon: string };
   EditProfile: undefined;
   PrivacyPolicy: undefined;
   OrderDetail: { orderId: string };
-  CreateOrder: { service: string; categoryId: string };
+  CreateOrder: { service: string; categoryId: number; categoryName: string; categoryIcon?: string; subcategoryId?: number };
   AvailableProfessionals: {
     service: string;
     description: string;
     address: string;
     schedule: string;
+    categoryId: number;
+    categoryName: string;
+    subcategoryId?: number;
   };
   OrderTracking: { orderId: string };
   OrderChat: { orderId: string };

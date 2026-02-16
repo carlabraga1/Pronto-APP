@@ -1,26 +1,62 @@
+import { useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   FlatList,
+  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ArrowLeft } from 'lucide-react-native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RouteProp } from '@react-navigation/native';
+import type { RootStackParamList } from '../../@types/navigation';
 import { colors } from '../../constants/colors';
-import { categories } from '../../constants/categories';
+import { getIcon } from '../../constants/iconMap';
+import api from '../../services/api';
 
-export default function SubCategoryScreen({ route, navigation }: any) {
-  const { categoryId } = route.params;
-  const category = categories.find((c) => c.id === categoryId);
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+type SubCategoryRoute = RouteProp<RootStackParamList, 'SubCategory'>;
 
-  if (!category) return null;
+type Subcategory = {
+  id: number;
+  name: string;
+  icon: string | null;
+};
 
-  const handleSelect = (name: string) => {
-    navigation.navigate('CreateOrder', { service: name, categoryId });
+export default function SubCategoryScreen() {
+  const navigation = useNavigation<NavigationProp>();
+  const route = useRoute<SubCategoryRoute>();
+  const { categoryId, categoryName, categoryIcon } = route.params;
+
+  const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data } = await api.get('/categories');
+        const cat = data.find((c: any) => c.id === categoryId);
+        setSubcategories(cat?.subcategories || []);
+      } catch (err) {
+        console.log('Erro ao buscar subcategorias:', err);
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, [categoryId]);
+
+  const handleSelect = (sub: Subcategory) => {
+    navigation.navigate('CreateOrder', {
+      service: sub.name,
+      categoryId,
+      categoryName,
+      categoryIcon,
+      subcategoryId: sub.id,
+    });
   };
-
-  const Icon = category.icon;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -29,32 +65,38 @@ export default function SubCategoryScreen({ route, navigation }: any) {
           <ArrowLeft size={22} color={colors.textPrimary} />
         </TouchableOpacity>
         <View style={styles.headerTitleRow}>
-          <Icon size={20} color={colors.brand} />
-          <Text style={styles.headerTitle}>{category.name}</Text>
+          {(() => { const Icon = getIcon(categoryIcon); return <Icon size={20} color={colors.brand} />; })()}
+          <Text style={styles.headerTitle}>{categoryName}</Text>
         </View>
         <View style={{ width: 40 }} />
       </View>
 
-      <FlatList
-        data={category.subs}
-        contentContainerStyle={styles.list}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => {
-          const SubIcon = item.icon;
-          return (
-            <TouchableOpacity
-              style={styles.card}
-              activeOpacity={0.7}
-              onPress={() => handleSelect(item.name)}
-            >
-              <View style={styles.iconContainer}>
-                <SubIcon size={24} color={colors.brand} />
-              </View>
-              <Text style={styles.cardName}>{item.name}</Text>
-            </TouchableOpacity>
-          );
-        }}
-      />
+      {loading ? (
+        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+          <ActivityIndicator size="large" color={colors.brand} />
+        </View>
+      ) : (
+        <FlatList
+          data={subcategories}
+          contentContainerStyle={styles.list}
+          keyExtractor={(item) => String(item.id)}
+          renderItem={({ item }) => {
+            const SubIcon = getIcon(item.icon || categoryIcon);
+            return (
+              <TouchableOpacity
+                style={styles.card}
+                activeOpacity={0.7}
+                onPress={() => handleSelect(item)}
+              >
+                <View style={styles.iconContainer}>
+                  <SubIcon size={24} color={colors.brand} />
+                </View>
+                <Text style={styles.cardName}>{item.name}</Text>
+              </TouchableOpacity>
+            );
+          }}
+        />
+      )}
     </SafeAreaView>
   );
 }
@@ -77,6 +119,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   headerTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  headerIcon: { width: 20 },
   headerTitle: { color: colors.textPrimary, fontSize: 17, fontWeight: '600' },
   list: { paddingHorizontal: 20, paddingTop: 8, gap: 10 },
   card: {
@@ -95,5 +138,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  subIcon: { width: 24 },
   cardName: { color: colors.textPrimary, fontSize: 16, fontWeight: '500' },
 });

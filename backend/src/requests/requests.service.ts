@@ -4,7 +4,7 @@ import {
   BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateRequestDto, UpdateStatusDto, AssignProfessionalDto } from './dto/create-request.dto';
+import { CreateRequestDto, UpdateStatusDto, AssignProfessionalDto, CreateReviewDto } from './dto/create-request.dto';
 
 // Mapeamento de status para o frontend
 const STATUS_MAP = {
@@ -38,7 +38,7 @@ export class RequestsService {
         scheduledTime: dto.scheduledTime ? new Date(dto.scheduledTime) : null,
         clientId: userId,
         categoryId: dto.categoryId,
-        subcategoryId: dto.subcategoryId || null,
+        subcategoryId: dto.subcategoryId ?? undefined,
       },
       include: {
         category: { select: { id: true, name: true, icon: true } },
@@ -110,6 +110,46 @@ export class RequestsService {
     });
 
     return mapStatus(updated);
+  }
+
+  async createReview(userId: number, orderId: number, dto: CreateReviewDto) {
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      include: { review: true },
+    });
+
+    if (!order) throw new NotFoundException('Pedido não encontrado');
+    if (order.clientId !== userId) throw new BadRequestException('Pedido não pertence a este usuário');
+    if (order.status !== 'FINALIZADO') throw new BadRequestException('Pedido ainda não foi finalizado');
+    if (order.review) throw new BadRequestException('Pedido já foi avaliado');
+    if (!order.professionalId) throw new BadRequestException('Pedido sem profissional atribuído');
+
+    const review = await this.prisma.review.create({
+      data: {
+        rating: dto.rating,
+        comment: dto.comment,
+        orderId,
+        clientId: userId,
+        professionalId: order.professionalId,
+      },
+    });
+
+    // Atualizar rating médio do profissional
+    const stats = await this.prisma.review.aggregate({
+      where: { professionalId: order.professionalId },
+      _avg: { rating: true },
+      _count: { rating: true },
+    });
+
+    await this.prisma.professional.update({
+      where: { id: order.professionalId },
+      data: {
+        rating: stats._avg.rating || 0,
+        reviewCount: stats._count.rating,
+      },
+    });
+
+    return review;
   }
 
   async findOne(orderId: number) {

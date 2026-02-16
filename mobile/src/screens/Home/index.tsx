@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation, useRoute, useFocusEffect } from '@react-navigation/native';
 import {
   MapPin,
   Search,
@@ -18,12 +18,26 @@ import {
   ChevronRight,
 } from 'lucide-react-native';
 import { colors } from '../../constants/colors';
-import { categories } from '../../constants/categories';
+import { getIcon } from '../../constants/iconMap';
+import { CATEGORIES } from '../../constants/categories';
 import { getCurrentLocation } from '../../services/location';
+import api from '../../services/api';
 
-const allServices = categories.flatMap((cat) =>
-  cat.subs.map((sub) => ({ ...sub, categoryId: cat.id, categoryName: cat.name }))
-);
+type BackendCategory = {
+  id: number;
+  name: string;
+  icon: string;
+  subcategories: { id: number; name: string; icon: string | null }[];
+};
+
+type SearchItem = {
+  id: string;
+  name: string;
+  categoryId: number;
+  categoryName: string;
+  categoryIcon: string;
+  subcategoryId?: number;
+};
 
 export default function HomeScreen() {
   const navigation = useNavigation<any>();
@@ -31,8 +45,67 @@ export default function HomeScreen() {
 
   const [address, setAddress] = useState('');
   const [loadingLocation, setLoadingLocation] = useState(true);
-  const [hasActiveOrder] = useState(true);
+  const [activeOrder, setActiveOrder] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [categories, setCategories] = useState<BackendCategory[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+
+  // Sincronizar categorias do frontend com o backend
+  useEffect(() => {
+    (async () => {
+      try {
+        const { data } = await api.post('/categories/sync', CATEGORIES);
+        setCategories(data);
+      } catch {
+        // Fallback: buscar categorias existentes
+        try {
+          const { data } = await api.get('/categories');
+          setCategories(data);
+        } catch {}
+      } finally {
+        setLoadingCategories(false);
+      }
+    })();
+  }, []);
+
+  // Buscar pedido ativo
+  useFocusEffect(
+    useCallback(() => {
+      let active = true;
+      (async () => {
+        try {
+          const { data } = await api.get('/requests?me=1');
+          const found = data.find((o: any) =>
+            !['FINALIZADO', 'CANCELADO'].includes(o.status)
+          );
+          if (active) setActiveOrder(found || null);
+        } catch {}
+      })();
+      return () => { active = false; };
+    }, [])
+  );
+
+  // Montar lista de serviços pesquisáveis a partir das categorias do backend
+  const allServices: SearchItem[] = categories.flatMap((cat) => {
+    const subs = (cat.subcategories || []).map((sub) => ({
+      id: `sub-${sub.id}`,
+      name: sub.name,
+      categoryId: cat.id,
+      categoryName: cat.name,
+      categoryIcon: cat.icon,
+      subcategoryId: sub.id,
+    }));
+    if (subs.length === 0) {
+      return [{
+        id: `cat-${cat.id}`,
+        name: cat.name,
+        categoryId: cat.id,
+        categoryName: cat.name,
+        categoryIcon: cat.icon,
+      }];
+    }
+    return subs;
+  });
 
   const searchResults = searchQuery.length >= 2
     ? allServices.filter((s) =>
@@ -58,12 +131,32 @@ export default function HomeScreen() {
     setLoadingLocation(false);
   };
 
-  const handleCategory = (categoryId: string, categoryName: string, hasSubcategories: boolean) => {
-    if (hasSubcategories) {
-      navigation.navigate('SubCategory', { categoryId });
+  const handleCategory = (cat: BackendCategory) => {
+    if (cat.subcategories && cat.subcategories.length > 0) {
+      navigation.navigate('SubCategory', {
+        categoryId: cat.id,
+        categoryName: cat.name,
+        categoryIcon: cat.icon,
+      });
     } else {
-      navigation.navigate('CreateOrder', { service: categoryName, categoryId });
+      navigation.navigate('CreateOrder', {
+        service: cat.name,
+        categoryId: cat.id,
+        categoryName: cat.name,
+        categoryIcon: cat.icon,
+      });
     }
+  };
+
+  const handleSearchSelect = (item: SearchItem) => {
+    setSearchQuery('');
+    navigation.navigate('CreateOrder', {
+      service: item.name,
+      categoryId: item.categoryId,
+      categoryName: item.categoryName,
+      categoryIcon: item.categoryIcon,
+      subcategoryId: item.subcategoryId,
+    });
   };
 
   return (
@@ -82,9 +175,6 @@ export default function HomeScreen() {
             onPress={() => navigation.navigate('Notifications')}
           >
             <Bell size={22} color={colors.textPrimary} />
-            <View style={styles.notificationBadge}>
-              <Text style={styles.notificationBadgeText}>3</Text>
-            </View>
           </TouchableOpacity>
         </View>
 
@@ -130,18 +220,15 @@ export default function HomeScreen() {
         {searchResults.length > 0 && (
           <View style={styles.searchResults}>
             {searchResults.map((item) => {
-              const Icon = item.icon;
+              const ItemIcon = getIcon(item.categoryIcon);
               return (
                 <TouchableOpacity
                   key={item.id}
                   style={styles.searchResultItem}
                   activeOpacity={0.7}
-                  onPress={() => {
-                    setSearchQuery('');
-                    navigation.navigate('CreateOrder', { service: item.name, categoryId: item.categoryId });
-                  }}
+                  onPress={() => handleSearchSelect(item)}
                 >
-                  <Icon size={20} color={colors.brand} />
+                  <ItemIcon size={20} color={colors.brand} />
                   <View style={styles.searchResultText}>
                     <Text style={styles.searchResultName}>{item.name}</Text>
                     <Text style={styles.searchResultCategory}>{item.categoryName}</Text>
@@ -160,37 +247,45 @@ export default function HomeScreen() {
 
         {/* Categorias */}
         <Text style={styles.sectionTitle}>Categorias</Text>
-        <View style={styles.categoriesGrid}>
-          {categories.map((cat) => {
-            const Icon = cat.icon;
-            return (
-              <TouchableOpacity
-                key={cat.id}
-                style={styles.categoryCard}
-                activeOpacity={0.7}
-                onPress={() => handleCategory(cat.id, cat.name, cat.subs.length > 0)}
-              >
-                <View style={styles.iconContainer}>
-                  <Icon size={26} color={colors.brand} />
-                </View>
-                <Text style={styles.categoryName}>{cat.name}</Text>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
+        {loadingCategories ? (
+          <ActivityIndicator size="small" color={colors.brand} style={{ marginVertical: 20 }} />
+        ) : (
+          <View style={styles.categoriesGrid}>
+            {categories.slice(0, 8).map((cat) => {
+              const CatIcon = getIcon(cat.icon);
+              return (
+                <TouchableOpacity
+                  key={cat.id}
+                  style={styles.categoryCard}
+                  activeOpacity={0.7}
+                  onPress={() => handleCategory(cat)}
+                >
+                  <View style={styles.iconContainer}>
+                    <CatIcon size={26} color={colors.brand} />
+                  </View>
+                  <Text style={styles.categoryName}>{cat.name}</Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        )}
 
         {/* Pedido ativo */}
-        {hasActiveOrder && (
+        {activeOrder && (
           <TouchableOpacity
             style={styles.activeOrderCard}
             activeOpacity={0.7}
-            onPress={() => navigation.navigate('OrderTracking', { orderId: '1' })}
+            onPress={() => navigation.navigate('OrderTracking', { orderId: String(activeOrder.id) })}
           >
             <View style={styles.activeOrderInfo}>
               <View style={styles.activeOrderDot} />
               <View>
                 <Text style={styles.activeOrderTitle}>Pedido em andamento</Text>
-                <Text style={styles.activeOrderSub}>Seu profissional está a caminho</Text>
+                <Text style={styles.activeOrderSub}>
+                  {activeOrder.professional?.name
+                    ? `${activeOrder.professional.name} - ${activeOrder.category?.name || ''}`
+                    : 'Procurando profissional...'}
+                </Text>
               </View>
             </View>
             <ArrowRight size={20} color={colors.brand} />
@@ -307,6 +402,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255,255,255,0.05)',
   },
+  searchResultIcon: { width: 20 },
   searchResultText: { flex: 1 },
   searchResultName: { color: colors.textPrimary, fontSize: 15, fontWeight: '500' },
   searchResultCategory: { color: colors.textSecondary, fontSize: 12, marginTop: 2 },
@@ -345,6 +441,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.backgroundDark,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  categoryIcon: {
+    width: 26,
   },
   categoryName: {
     color: colors.textPrimary,

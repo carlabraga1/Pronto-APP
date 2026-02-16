@@ -33,11 +33,16 @@ export default function RegisterScreen() {
   const validate = () => {
     const e: Record<string, string> = {};
     if (!name.trim()) e.name = 'Informe seu nome';
-    if (!email.trim()) e.email = 'Informe seu e-mail ou telefone';
+    if (!email.trim()) e.email = 'Informe seu e-mail';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) e.email = 'Informe um e-mail válido';
     if (!password) e.password = 'Crie uma senha';
-    else if (password.length < 6) e.password = 'Senha deve ter no mínimo 6 caracteres';
+    else if (password.length < 6) e.password = 'Mínimo 6 caracteres';
+    else if (!/[A-Z]/.test(password)) e.password = 'Inclua uma letra maiúscula';
+    else if (!/[a-z]/.test(password)) e.password = 'Inclua uma letra minúscula';
+    else if (!/[0-9]/.test(password)) e.password = 'Inclua um número';
     if (!confirmPassword) e.confirmPassword = 'Confirme sua senha';
     else if (password !== confirmPassword) e.confirmPassword = 'As senhas não coincidem';
+    if (!termsAccepted) e.terms = 'Você precisa aceitar os termos para continuar';
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -100,7 +105,7 @@ export default function RegisterScreen() {
 
             {/* Email */}
             <View>
-              <Text style={styles.label}>E-mail ou Telefone</Text>
+              <Text style={styles.label}>E-mail</Text>
               <TextInput
                 style={[styles.input, errors.email && styles.inputError]}
                 placeholder="seu@email.com"
@@ -137,6 +142,22 @@ export default function RegisterScreen() {
                 </TouchableOpacity>
               </View>
               {!!errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
+              {password.length > 0 && (
+                <View style={styles.passwordRules}>
+                  <Text style={[styles.ruleText, password.length >= 6 && styles.ruleValid]}>
+                    {password.length >= 6 ? '✓' : '○'} Mínimo 6 caracteres
+                  </Text>
+                  <Text style={[styles.ruleText, /[A-Z]/.test(password) && styles.ruleValid]}>
+                    {/[A-Z]/.test(password) ? '✓' : '○'} Letra maiúscula
+                  </Text>
+                  <Text style={[styles.ruleText, /[a-z]/.test(password) && styles.ruleValid]}>
+                    {/[a-z]/.test(password) ? '✓' : '○'} Letra minúscula
+                  </Text>
+                  <Text style={[styles.ruleText, /[0-9]/.test(password) && styles.ruleValid]}>
+                    {/[0-9]/.test(password) ? '✓' : '○'} Número
+                  </Text>
+                </View>
+              )}
             </View>
 
             {/* Confirmar Senha */}
@@ -168,34 +189,37 @@ export default function RegisterScreen() {
             </View>
 
             {/* Termos */}
-            <TouchableOpacity
-              style={styles.termsRow}
-              activeOpacity={0.7}
-              onPress={() => setTermsAccepted(!termsAccepted)}
-            >
-              <View
-                style={[
-                  styles.checkbox,
-                  termsAccepted && styles.checkboxChecked,
-                ]}
+            <View>
+              <TouchableOpacity
+                style={styles.termsRow}
+                activeOpacity={0.7}
+                onPress={() => { setTermsAccepted(!termsAccepted); clearError('terms'); }}
               >
-                {termsAccepted && <Check size={14} color={colors.backgroundDark} />}
-              </View>
-              <Text style={styles.termsText}>
-                Aceito os{' '}
-                <Text style={styles.termsLink}>termos de uso</Text>
-                {' '}e{' '}
-                <Text style={styles.termsLink}>política de privacidade</Text>
-              </Text>
-            </TouchableOpacity>
+                <View
+                  style={[
+                    styles.checkbox,
+                    termsAccepted && styles.checkboxChecked,
+                  ]}
+                >
+                  {termsAccepted && <Check size={14} color={colors.backgroundDark} />}
+                </View>
+                <Text style={styles.termsText}>
+                  Aceito os{' '}
+                  <Text style={styles.termsLink}>termos de uso</Text>
+                  {' '}e{' '}
+                  <Text style={styles.termsLink}>política de privacidade</Text>
+                </Text>
+              </TouchableOpacity>
+              {!!errors.terms && <Text style={styles.errorText}>{errors.terms}</Text>}
+            </View>
           </View>
 
           {/* Botão Cadastrar */}
           <TouchableOpacity
-            style={[styles.primaryBtn, loading && styles.primaryBtnDisabled]}
+            style={[styles.primaryBtn, (loading || !termsAccepted) && styles.primaryBtnDisabled]}
             activeOpacity={0.8}
             onPress={handleRegister}
-            disabled={loading}
+            disabled={loading || !termsAccepted}
           >
             {loading ? (
               <ActivityIndicator color={colors.backgroundDark} />
@@ -293,6 +317,17 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 6,
     marginLeft: 4,
+  },
+  passwordRules: {
+    marginTop: 8,
+    gap: 4,
+  },
+  ruleText: {
+    color: colors.textSecondary,
+    fontSize: 12,
+  },
+  ruleValid: {
+    color: colors.brand,
   },
   termsRow: {
     flexDirection: 'row',

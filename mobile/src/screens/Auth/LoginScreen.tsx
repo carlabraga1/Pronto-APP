@@ -28,7 +28,8 @@ export default function LoginScreen() {
 
   const validate = () => {
     const newErrors: typeof errors = {};
-    if (!email.trim()) newErrors.email = 'Informe seu e-mail ou telefone';
+    if (!email.trim()) newErrors.email = 'Informe seu e-mail';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) newErrors.email = 'Informe um e-mail válido';
     if (!password) newErrors.password = 'Informe sua senha';
     else if (password.length < 6) newErrors.password = 'Senha deve ter no mínimo 6 caracteres';
     setErrors(newErrors);
@@ -74,7 +75,7 @@ export default function LoginScreen() {
           {/* Formulário */}
           <View style={styles.form}>
             <View>
-              <Text style={styles.label}>E-mail ou Telefone</Text>
+              <Text style={styles.label}>E-mail</Text>
               <TextInput
                 style={[styles.input, errors.email && styles.inputError]}
                 placeholder="seu@email.com"

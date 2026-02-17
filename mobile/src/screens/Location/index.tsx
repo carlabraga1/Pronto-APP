@@ -16,10 +16,16 @@ import { ArrowLeft, LocateFixed, MapPin } from 'lucide-react-native';
 type Region = { latitude: number; longitude: number; latitudeDelta: number; longitudeDelta: number };
 let MapView: any = View;
 let Marker: any = View;
+let PROVIDER_GOOGLE: any = undefined;
 if (Platform.OS !== 'web') {
-  const maps = require('react-native-maps');
-  MapView = maps.default;
-  Marker = maps.Marker;
+  try {
+    const maps = require('react-native-maps');
+    MapView = maps.default;
+    Marker = maps.Marker;
+    PROVIDER_GOOGLE = maps.PROVIDER_GOOGLE;
+  } catch (e) {
+    console.log('react-native-maps not available');
+  }
 }
 import { colors } from '../../constants/colors';
 import {
@@ -158,7 +164,7 @@ export default function LocationScreen({ navigation }: any) {
 
       {/* Mapa */}
       <View style={styles.mapContainer}>
-        <MapView ref={mapRef} style={styles.map} region={region} onPress={handleMapPress}>
+        <MapView ref={mapRef} style={styles.map} region={region} onPress={handleMapPress} provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined}>
           <Marker coordinate={markerCoord} />
         </MapView>
 

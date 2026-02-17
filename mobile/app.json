@@ -21,7 +21,12 @@
         "foregroundImage": "./assets/prontologo.png",
         "backgroundColor": "#1a1a1a"
       },
-      "edgeToEdgeEnabled": false
+      "edgeToEdgeEnabled": false,
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyC73udLF6A1Q7Kwi_5sy8zgEIOJpx3T8hU"
+        }
+      }
     },
     "extra": {
       "eas": {

@@ -18,11 +18,17 @@ import api from '../../services/api';
 let MapView: any = View;
 let Marker: any = View;
 let Polyline: any = View;
+let PROVIDER_GOOGLE: any = undefined;
 if (Platform.OS !== 'web') {
-  const maps = require('react-native-maps');
-  MapView = maps.default;
-  Marker = maps.Marker;
-  Polyline = maps.Polyline;
+  try {
+    const maps = require('react-native-maps');
+    MapView = maps.default;
+    Marker = maps.Marker;
+    Polyline = maps.Polyline;
+    PROVIDER_GOOGLE = maps.PROVIDER_GOOGLE;
+  } catch (e) {
+    console.log('react-native-maps not available');
+  }
 }
 import {
   ArrowLeft,
@@ -360,6 +366,7 @@ export default function OrderTrackingScreen() {
       <MapView
         ref={mapRef}
         style={styles.map}
+        provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined}
         customMapStyle={darkMapStyle}
         initialRegion={{
           latitude: (PRO_START.latitude + DESTINATION.latitude) / 2,

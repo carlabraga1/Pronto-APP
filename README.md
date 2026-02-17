@@ -1,4 +1,4 @@
-# Pronto - Serviços Rápidos com IA
+# Pronto - Serviços Rápidos 
 
 O **Pronto** é um aplicativo mobile que conecta clientes a profissionais de serviços sob demanda, de forma rápida e inteligente. Inspirado na experiência do Uber, o usuário escolhe o que precisa, confirma sua localização e um profissional qualificado é enviado até ele.
 

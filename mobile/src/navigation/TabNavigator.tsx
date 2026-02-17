@@ -1,4 +1,6 @@
+import { Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Home, ClipboardList, UserRound } from 'lucide-react-native';
 import HomeScreen from '../screens/Home';
 import OrdersScreen from '../screens/Orders';
@@ -8,6 +10,10 @@ import { colors } from '../constants/colors';
 const Tab = createBottomTabNavigator();
 
 export default function TabNavigator() {
+  const insets = useSafeAreaInsets();
+  const bottomPadding = Platform.OS === 'android' ? Math.max(insets.bottom, 8) : 8;
+  const tabBarHeight = 56 + bottomPadding;
+
   return (
     <Tab.Navigator
       screenOptions={{
@@ -16,9 +22,10 @@ export default function TabNavigator() {
           backgroundColor: colors.surface,
           borderTopColor: 'rgba(255, 255, 255, 0.05)',
           borderTopWidth: 1,
-          height: 60,
-          paddingBottom: 8,
+          height: tabBarHeight,
+          paddingBottom: bottomPadding,
           paddingTop: 8,
+          elevation: 8,
         },
         tabBarActiveTintColor: colors.brand,
         tabBarInactiveTintColor: colors.textSecondary,

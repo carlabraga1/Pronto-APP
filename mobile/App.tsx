@@ -1,4 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
+import { Platform, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider } from './src/contexts/AuthContext';
@@ -11,7 +12,11 @@ export default function App() {
       <AuthProvider>
         <ProfileProvider>
           <NavigationContainer>
-            <StatusBar style="light" />
+            <StatusBar
+              style="light"
+              backgroundColor="#121212"
+              translucent={Platform.OS === 'android'}
+            />
             <AppNavigator />
           </NavigationContainer>
         </ProfileProvider>

@@ -1,9 +1,8 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// IP da sua máquina na rede Wi-Fi (celular e PC devem estar na mesma rede)
-// Altere aqui para o IP da sua máquina ou URL de produção
-export const BASE_URL = 'http://192.168.15.2:3000';
+// URL do backend em produção (Railway)
+export const BASE_URL = 'https://backend-production-77bc.up.railway.app';
 
 const api = axios.create({
   baseURL: BASE_URL,

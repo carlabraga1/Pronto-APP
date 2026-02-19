@@ -2,7 +2,6 @@ import { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   TextInput,
   TouchableOpacity,
   ScrollView,
@@ -117,7 +116,6 @@ export default function AddAddressScreen() {
         setLatitude(params.mapAddress.latitude);
         setLongitude(params.mapAddress.longitude);
         if (params.mapAddress.zipCode) setCep(formatCep(params.mapAddress.zipCode));
-        // Clear map params to avoid re-applying
         navigation.setParams({ mapAddress: undefined } as any);
       }
     });
@@ -167,41 +165,45 @@ export default function AddAddressScreen() {
   const hasCoords = latitude !== undefined && longitude !== undefined;
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView className="flex-1 bg-bgDark" edges={['top']}>
       {/* Header */}
-      <View style={styles.header}>
+      <View className="flex-row items-center justify-between px-5 py-3.5">
         <TouchableOpacity
           onPress={() => navigation.goBack()}
-          style={styles.backBtn}
+          className="w-10 h-10 items-center justify-center"
           activeOpacity={0.7}
         >
           <ArrowLeft size={22} color={colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>
+        <Text className="text-white text-lg font-bold">
           {isEdit ? 'Editar Endereço' : 'Novo Endereço'}
         </Text>
-        <View style={{ width: 40 }} />
+        <View className="w-10" />
       </View>
 
       <KeyboardAvoidingView
-        style={{ flex: 1 }}
+        className="flex-1"
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.scrollContent}
+          contentContainerClassName="px-5 pb-10"
           keyboardShouldPersistTaps="handled"
         >
           {/* Label selector */}
-          <Text style={styles.sectionTitle}>Tipo</Text>
-          <View style={styles.labelRow}>
+          <Text className="text-textSecondary text-[13px] font-semibold uppercase tracking-wide mb-2.5 mt-5">
+            Tipo
+          </Text>
+          <View className="flex-row gap-2.5">
             {LABELS.map((item) => {
               const Icon = item.icon;
               const selected = label === item.key;
               return (
                 <TouchableOpacity
                   key={item.key}
-                  style={[styles.labelChip, selected && styles.labelChipSelected]}
+                  className={`flex-row items-center gap-1.5 py-2.5 px-4 rounded-xl ${
+                    selected ? 'bg-brand' : 'bg-surface'
+                  }`}
                   activeOpacity={0.7}
                   onPress={() => setLabel(item.key)}
                 >
@@ -210,10 +212,9 @@ export default function AddAddressScreen() {
                     color={selected ? colors.backgroundDark : colors.textSecondary}
                   />
                   <Text
-                    style={[
-                      styles.labelChipText,
-                      selected && styles.labelChipTextSelected,
-                    ]}
+                    className={`text-sm ${
+                      selected ? 'text-bgDark font-bold' : 'text-textSecondary font-medium'
+                    }`}
                   >
                     {item.key}
                   </Text>
@@ -223,12 +224,14 @@ export default function AddAddressScreen() {
           </View>
 
           {/* CEP */}
-          <Text style={styles.sectionTitle}>CEP</Text>
-          <View style={styles.cepRow}>
-            <View style={[styles.inputBox, { flex: 1 }]}>
+          <Text className="text-textSecondary text-[13px] font-semibold uppercase tracking-wide mb-2.5 mt-5">
+            CEP
+          </Text>
+          <View className="flex-row gap-2.5">
+            <View className="flex-1 flex-row items-center bg-surface rounded-[14px] px-3.5 gap-2.5 mb-2.5">
               <Search size={16} color={colors.textSecondary} />
               <TextInput
-                style={styles.input}
+                className="flex-1 text-white text-[15px] py-3.5"
                 value={cep}
                 onChangeText={handleCepChange}
                 placeholder="00000-000"
@@ -238,8 +241,8 @@ export default function AddAddressScreen() {
               />
               {loadingCep && <ActivityIndicator size="small" color={colors.brand} />}
               {cepFound && (
-                <View style={styles.cepOk}>
-                  <Text style={styles.cepOkText}>OK</Text>
+                <View className="bg-success/20 px-2 py-[3px] rounded-lg">
+                  <Text className="text-success text-xs font-bold">OK</Text>
                 </View>
               )}
             </View>
@@ -247,20 +250,22 @@ export default function AddAddressScreen() {
 
           {/* Map button */}
           <TouchableOpacity
-            style={styles.mapBtn}
+            className="flex-row items-center justify-center gap-2 bg-surface rounded-[14px] py-3.5 border border-dashed border-brand/30"
             activeOpacity={0.7}
             onPress={handleOpenMap}
           >
             <Map size={18} color={colors.brand} />
-            <Text style={styles.mapBtnText}>Buscar no mapa</Text>
+            <Text className="text-brand text-sm font-semibold">Buscar no mapa</Text>
           </TouchableOpacity>
 
           {/* Address fields */}
-          <Text style={styles.sectionTitle}>Endereço</Text>
+          <Text className="text-textSecondary text-[13px] font-semibold uppercase tracking-wide mb-2.5 mt-5">
+            Endereço
+          </Text>
 
-          <View style={styles.inputBox}>
+          <View className="flex-row items-center bg-surface rounded-[14px] px-3.5 gap-2.5 mb-2.5">
             <TextInput
-              style={styles.input}
+              className="flex-1 text-white text-[15px] py-3.5"
               value={street}
               onChangeText={setStreet}
               placeholder="Rua / Avenida"
@@ -268,11 +273,11 @@ export default function AddAddressScreen() {
             />
           </View>
 
-          <View style={styles.row}>
-            <View style={[styles.inputBox, { flex: 1 }]}>
+          <View className="flex-row gap-2.5">
+            <View className="flex-1 flex-row items-center bg-surface rounded-[14px] px-3.5 gap-2.5 mb-2.5">
               <TextInput
                 ref={numberRef}
-                style={styles.input}
+                className="flex-1 text-white text-[15px] py-3.5"
                 value={number}
                 onChangeText={setNumber}
                 placeholder="Número"
@@ -280,9 +285,9 @@ export default function AddAddressScreen() {
                 keyboardType="number-pad"
               />
             </View>
-            <View style={[styles.inputBox, { flex: 2 }]}>
+            <View className="flex-[2] flex-row items-center bg-surface rounded-[14px] px-3.5 gap-2.5 mb-2.5">
               <TextInput
-                style={styles.input}
+                className="flex-1 text-white text-[15px] py-3.5"
                 value={complement}
                 onChangeText={setComplement}
                 placeholder="Complemento (opcional)"
@@ -291,19 +296,19 @@ export default function AddAddressScreen() {
             </View>
           </View>
 
-          <View style={styles.row}>
-            <View style={[styles.inputBox, { flex: 2 }]}>
+          <View className="flex-row gap-2.5">
+            <View className="flex-[2] flex-row items-center bg-surface rounded-[14px] px-3.5 gap-2.5 mb-2.5">
               <TextInput
-                style={styles.input}
+                className="flex-1 text-white text-[15px] py-3.5"
                 value={city}
                 onChangeText={setCity}
                 placeholder="Cidade"
                 placeholderTextColor={colors.textSecondary}
               />
             </View>
-            <View style={[styles.inputBox, { flex: 1 }]}>
+            <View className="flex-1 flex-row items-center bg-surface rounded-[14px] px-3.5 gap-2.5 mb-2.5">
               <TextInput
-                style={styles.input}
+                className="flex-1 text-white text-[15px] py-3.5"
                 value={state}
                 onChangeText={setState}
                 placeholder="UF"
@@ -316,9 +321,11 @@ export default function AddAddressScreen() {
 
           {/* Mini map */}
           {hasCoords && Platform.OS !== 'web' && (
-            <View style={styles.miniMapContainer}>
-              <Text style={styles.sectionTitle}>Localização no mapa</Text>
-              <View style={styles.miniMap}>
+            <View className="mb-2.5">
+              <Text className="text-textSecondary text-[13px] font-semibold uppercase tracking-wide mb-2.5 mt-5">
+                Localização no mapa
+              </Text>
+              <View className="h-40 rounded-[14px] overflow-hidden">
                 <MapView
                   style={{ flex: 1 }}
                   region={{
@@ -341,7 +348,9 @@ export default function AddAddressScreen() {
 
           {/* Save button */}
           <TouchableOpacity
-            style={[styles.saveBtn, !isValid && styles.saveBtnDisabled]}
+            className={`flex-row items-center justify-center gap-2 bg-brand rounded-[14px] py-4 mt-6 ${
+              !isValid ? 'opacity-40' : ''
+            }`}
             activeOpacity={0.7}
             onPress={handleSave}
             disabled={!isValid || saving}
@@ -351,7 +360,7 @@ export default function AddAddressScreen() {
             ) : (
               <>
                 <MapPin size={18} color={colors.backgroundDark} />
-                <Text style={styles.saveBtnText}>
+                <Text className="text-bgDark text-base font-bold">
                   {isEdit ? 'Salvar alterações' : 'Salvar endereço'}
                 </Text>
               </>
@@ -362,143 +371,3 @@ export default function AddAddressScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.backgroundDark,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    color: colors.textPrimary,
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  scrollContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 40,
-  },
-  sectionTitle: {
-    color: colors.textSecondary,
-    fontSize: 13,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 10,
-    marginTop: 20,
-  },
-  labelRow: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  labelChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 12,
-    backgroundColor: colors.surface,
-  },
-  labelChipSelected: {
-    backgroundColor: colors.brand,
-  },
-  labelChipText: {
-    color: colors.textSecondary,
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  labelChipTextSelected: {
-    color: colors.backgroundDark,
-    fontWeight: '700',
-  },
-  cepRow: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  inputBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    gap: 10,
-    marginBottom: 10,
-  },
-  input: {
-    flex: 1,
-    color: colors.textPrimary,
-    fontSize: 15,
-    paddingVertical: 14,
-  },
-  cepOk: {
-    backgroundColor: 'rgba(76,175,80,0.2)',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-  },
-  cepOkText: {
-    color: colors.success,
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  mapBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: colors.surface,
-    borderRadius: 14,
-    paddingVertical: 14,
-    borderWidth: 1,
-    borderColor: 'rgba(255,193,7,0.3)',
-    borderStyle: 'dashed',
-  },
-  mapBtnText: {
-    color: colors.brand,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  row: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  miniMapContainer: {
-    marginBottom: 10,
-  },
-  miniMap: {
-    height: 160,
-    borderRadius: 14,
-    overflow: 'hidden',
-  },
-  saveBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: colors.brand,
-    borderRadius: 14,
-    paddingVertical: 16,
-    marginTop: 24,
-  },
-  saveBtnDisabled: {
-    opacity: 0.4,
-  },
-  saveBtnText: {
-    color: colors.backgroundDark,
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-});

@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
@@ -24,6 +23,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import type { RootStackParamList } from '../../@types/navigation';
 import { colors } from '../../constants/colors';
+
 import api from '../../services/api';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -75,15 +75,15 @@ export default function ProfessionalProfileScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container} edges={['top']}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+      <SafeAreaView className="flex-1 bg-bgDark" edges={['top']}>
+        <View className="flex-row items-center justify-between px-5 py-3.5">
+          <TouchableOpacity onPress={() => navigation.goBack()} className="w-10 h-10 items-center justify-center">
             <ArrowLeft size={22} color={colors.textPrimary} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Profissional</Text>
-          <View style={styles.backBtn} />
+          <Text className="text-white text-lg font-bold">Profissional</Text>
+          <View className="w-10 h-10" />
         </View>
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <View className="flex-1 justify-center items-center">
           <ActivityIndicator size="large" color={colors.brand} />
         </View>
       </SafeAreaView>
@@ -92,92 +92,92 @@ export default function ProfessionalProfileScreen() {
 
   if (!professional) {
     return (
-      <SafeAreaView style={styles.container} edges={['top']}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+      <SafeAreaView className="flex-1 bg-bgDark" edges={['top']}>
+        <View className="flex-row items-center justify-between px-5 py-3.5">
+          <TouchableOpacity onPress={() => navigation.goBack()} className="w-10 h-10 items-center justify-center">
             <ArrowLeft size={22} color={colors.textPrimary} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Profissional</Text>
-          <View style={styles.backBtn} />
+          <Text className="text-white text-lg font-bold">Profissional</Text>
+          <View className="w-10 h-10" />
         </View>
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-          <Text style={{ color: colors.textSecondary, fontSize: 16 }}>Profissional não encontrado</Text>
+        <View className="flex-1 justify-center items-center">
+          <Text className="text-textSecondary text-base">Profissional não encontrado</Text>
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView className="flex-1 bg-bgDark" edges={['top']}>
       {/* Header */}
-      <View style={styles.header}>
+      <View className="flex-row items-center justify-between px-5 py-3.5">
         <TouchableOpacity
           onPress={() => navigation.goBack()}
-          style={styles.backBtn}
+          className="w-10 h-10 items-center justify-center"
           activeOpacity={0.7}
         >
           <ArrowLeft size={22} color={colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Profissional</Text>
-        <View style={styles.backBtn} />
+        <Text className="text-white text-lg font-bold">Profissional</Text>
+        <View className="w-10 h-10" />
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="px-5">
         {/* Profile header */}
-        <View style={styles.profileHeader}>
-          <View style={styles.avatar}>
+        <View className="items-center py-5 gap-2">
+          <View className="w-[90px] h-[90px] rounded-full bg-surface items-center justify-center mb-2">
             <UserRound size={40} color={colors.textSecondary} />
           </View>
-          <Text style={styles.profileName}>{professional.name}</Text>
-          <View style={styles.ratingRow}>
+          <Text className="text-white text-[22px] font-bold">{professional.name}</Text>
+          <View className="flex-row items-center gap-1.5">
             <Star size={16} color={colors.brand} fill={colors.brand} />
-            <Text style={styles.ratingText}>{professional.rating.toFixed(1)}</Text>
-            <Text style={styles.reviewsCount}>({professional.reviewCount} aval.)</Text>
+            <Text className="text-brand text-base font-bold">{professional.rating.toFixed(1)}</Text>
+            <Text className="text-textSecondary text-sm">({professional.reviewCount} aval.)</Text>
           </View>
-          <Text style={styles.specialty}>{professional.category?.name || ''}</Text>
+          <Text className="text-white text-[15px] font-medium">{professional.category?.name || ''}</Text>
           {professional.city && (
-            <View style={styles.locationRow}>
+            <View className="flex-row items-center gap-1">
               <MapPin size={14} color={colors.textSecondary} />
-              <Text style={styles.locationText}>{professional.city}</Text>
+              <Text className="text-textSecondary text-sm">{professional.city}</Text>
             </View>
           )}
         </View>
 
         {/* Sobre */}
         {professional.bio && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>SOBRE</Text>
-            <View style={styles.card}>
-              <Text style={styles.bioText}>{professional.bio}</Text>
+          <View className="mb-6">
+            <Text className="text-textSecondary text-[13px] font-semibold uppercase tracking-wide mb-3">SOBRE</Text>
+            <View className="bg-surface rounded-[14px] p-4">
+              <Text className="text-white text-sm leading-[22px]">{professional.bio}</Text>
             </View>
           </View>
         )}
 
         {/* Informações */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>INFORMAÇÕES</Text>
-          <View style={styles.card}>
-            <View style={styles.infoItem}>
+        <View className="mb-6">
+          <Text className="text-textSecondary text-[13px] font-semibold uppercase tracking-wide mb-3">INFORMAÇÕES</Text>
+          <View className="bg-surface rounded-[14px] p-4">
+            <View className="flex-row items-center py-3 gap-2.5">
               <Calendar size={16} color={colors.textSecondary} />
-              <Text style={styles.infoLabel}>No app desde</Text>
-              <Text style={styles.infoValue}>{formatMemberSince(professional.memberSince)}</Text>
+              <Text className="flex-1 text-textSecondary text-sm">No app desde</Text>
+              <Text className="text-white text-sm font-semibold">{formatMemberSince(professional.memberSince)}</Text>
             </View>
-            <View style={[styles.infoItem, styles.infoBorder]}>
+            <View className="flex-row items-center py-3 gap-2.5 border-t border-white/5">
               <Briefcase size={16} color={colors.textSecondary} />
-              <Text style={styles.infoLabel}>Serviços</Text>
-              <Text style={styles.infoValue}>{professional.completedServices}+</Text>
+              <Text className="flex-1 text-textSecondary text-sm">Serviços</Text>
+              <Text className="text-white text-sm font-semibold">{professional.completedServices}+</Text>
             </View>
-            <View style={[styles.infoItem, styles.infoBorder]}>
+            <View className="flex-row items-center py-3 gap-2.5 border-t border-white/5">
               <Clock size={16} color={colors.textSecondary} />
-              <Text style={styles.infoLabel}>Tempo resposta</Text>
-              <Text style={styles.infoValue}>
+              <Text className="flex-1 text-textSecondary text-sm">Tempo resposta</Text>
+              <Text className="text-white text-sm font-semibold">
                 {professional.responseTime ? `~${professional.responseTime} min` : 'N/A'}
               </Text>
             </View>
-            <View style={[styles.infoItem, styles.infoBorder]}>
+            <View className="flex-row items-center py-3 gap-2.5 border-t border-white/5">
               <ShieldCheck size={16} color={colors.textSecondary} />
-              <Text style={styles.infoLabel}>Verificado</Text>
-              <Text style={[styles.infoValue, professional.verified && styles.verifiedText]}>
+              <Text className="flex-1 text-textSecondary text-sm">Verificado</Text>
+              <Text className={`text-sm font-semibold ${professional.verified ? 'text-success' : 'text-white'}`}>
                 {professional.verified ? 'Sim' : 'Não'}
               </Text>
             </View>
@@ -186,21 +186,23 @@ export default function ProfessionalProfileScreen() {
 
         {/* Avaliações */}
         {professional.reviews && professional.reviews.length > 0 && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>AVALIAÇÕES ({professional.reviewCount})</Text>
-            <View style={styles.reviewsList}>
+          <View className="mb-6">
+            <Text className="text-textSecondary text-[13px] font-semibold uppercase tracking-wide mb-3">
+              AVALIAÇÕES ({professional.reviewCount})
+            </Text>
+            <View className="gap-2.5">
               {professional.reviews.map((review: any) => (
-                <View key={review.id} style={styles.reviewCard}>
-                  <View style={styles.reviewHeader}>
-                    <Text style={styles.reviewAuthor}>{review.client?.name || 'Anônimo'}</Text>
-                    <View style={styles.reviewMeta}>
+                <View key={review.id} className="bg-surface rounded-[14px] p-4 gap-2">
+                  <View className="flex-row items-center justify-between">
+                    <Text className="text-white text-sm font-semibold">{review.client?.name || 'Anônimo'}</Text>
+                    <View className="flex-row items-center gap-1">
                       <Star size={12} color={colors.brand} fill={colors.brand} />
-                      <Text style={styles.reviewRating}>{review.rating}</Text>
-                      <Text style={styles.reviewDate}>{formatReviewDate(review.createdAt)}</Text>
+                      <Text className="text-brand text-[13px] font-semibold">{review.rating}</Text>
+                      <Text className="text-textSecondary text-xs ml-1">{formatReviewDate(review.createdAt)}</Text>
                     </View>
                   </View>
                   {review.comment && (
-                    <Text style={styles.reviewComment}>"{review.comment}"</Text>
+                    <Text className="text-textSecondary text-sm leading-5 italic">"{review.comment}"</Text>
                   )}
                 </View>
               ))}
@@ -208,57 +210,20 @@ export default function ProfessionalProfileScreen() {
           </View>
         )}
 
-        <View style={{ height: 80 }} />
+        <View className="h-20" />
       </ScrollView>
 
       {/* Fixed CTA */}
-      <View style={styles.ctaContainer}>
+      <View className="absolute bottom-0 left-0 right-0 px-5 pt-3 pb-[30px] bg-bgDark border-t border-white/[0.06]">
         <TouchableOpacity
-          style={styles.ctaBtn}
+          className="flex-row items-center justify-center gap-2.5 bg-brand rounded-[14px] py-4"
           activeOpacity={0.7}
           onPress={() => navigation.goBack()}
         >
           <MessageSquare size={20} color={colors.backgroundDark} />
-          <Text style={styles.ctaBtnText}>Chamar Profissional</Text>
+          <Text className="text-bgDark text-base font-bold">Chamar Profissional</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.backgroundDark },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 14 },
-  backBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { color: colors.textPrimary, fontSize: 18, fontWeight: '700' },
-  content: { paddingHorizontal: 20 },
-  profileHeader: { alignItems: 'center', paddingVertical: 20, gap: 8 },
-  avatar: { width: 90, height: 90, borderRadius: 45, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
-  profileName: { color: colors.textPrimary, fontSize: 22, fontWeight: '700' },
-  ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  ratingText: { color: colors.brand, fontSize: 16, fontWeight: '700' },
-  reviewsCount: { color: colors.textSecondary, fontSize: 14 },
-  specialty: { color: colors.textPrimary, fontSize: 15, fontWeight: '500' },
-  locationRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  locationText: { color: colors.textSecondary, fontSize: 14 },
-  section: { marginBottom: 24 },
-  sectionTitle: { color: colors.textSecondary, fontSize: 13, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 12 },
-  card: { backgroundColor: colors.surface, borderRadius: 14, padding: 16 },
-  bioText: { color: colors.textPrimary, fontSize: 14, lineHeight: 22 },
-  infoItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, gap: 10 },
-  infoBorder: { borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.05)' },
-  infoLabel: { flex: 1, color: colors.textSecondary, fontSize: 14 },
-  infoValue: { color: colors.textPrimary, fontSize: 14, fontWeight: '600' },
-  verifiedText: { color: colors.success },
-  reviewsList: { gap: 10 },
-  reviewCard: { backgroundColor: colors.surface, borderRadius: 14, padding: 16, gap: 8 },
-  reviewHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  reviewAuthor: { color: colors.textPrimary, fontSize: 14, fontWeight: '600' },
-  reviewMeta: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  reviewRating: { color: colors.brand, fontSize: 13, fontWeight: '600' },
-  reviewDate: { color: colors.textSecondary, fontSize: 12, marginLeft: 4 },
-  reviewComment: { color: colors.textSecondary, fontSize: 14, lineHeight: 20, fontStyle: 'italic' },
-  ctaContainer: { position: 'absolute', bottom: 0, left: 0, right: 0, paddingHorizontal: 20, paddingTop: 12, paddingBottom: 30, backgroundColor: colors.backgroundDark, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)' },
-  ctaBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, backgroundColor: colors.brand, borderRadius: 14, paddingVertical: 16 },
-  ctaBtnText: { color: colors.backgroundDark, fontSize: 16, fontWeight: '700' },
-});

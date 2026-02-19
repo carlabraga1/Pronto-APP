@@ -1,8 +1,8 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// URL do backend em produção (Railway)
-export const BASE_URL = 'https://backend-production-77bc.up.railway.app';
+// URL do backend local via ngrok HTTPS
+export const BASE_URL = 'https://unlibellous-cacodaemonic-edwina.ngrok-free.dev';
 
 const api = axios.create({
   baseURL: BASE_URL,

@@ -32,9 +32,9 @@ export class AuthService {
       const exists = await this.prisma.user.findUnique({ where: { email } });
       if (exists) throw new ConflictException('Email já cadastrado');
 
-      const hashed = await bcrypt.hash(password, 10);
+      // const hashed = await bcrypt.hash(password, 10);
       const user = await this.prisma.user.create({
-        data: { name, email, password: hashed, phoneNumber },
+        data: { name, email, password: password, phoneNumber },
       });
 
       return this.buildResponse(user.id, user.email, 'client', user.name);
@@ -60,8 +60,7 @@ export class AuthService {
       const user = await this.prisma.user.findUnique({ where: { email } });
       if (!user) throw new UnauthorizedException('Email ou senha inválidos');
 
-      const valid = await bcrypt.compare(password, user.password);
-      if (!valid) throw new UnauthorizedException('Email ou senha inválidos');
+      if (password !== user.password) throw new UnauthorizedException('Email ou senha inválidos');
 
       return this.buildResponse(user.id, user.email, 'client', user.name);
     }
@@ -69,7 +68,7 @@ export class AuthService {
     const professional = await this.prisma.professional.findUnique({ where: { email } });
     if (!professional) throw new UnauthorizedException('Email ou senha inválidos');
 
-    const valid = await bcrypt.compare(password, professional.password);
+    const valid = password === professional.password
     if (!valid) throw new UnauthorizedException('Email ou senha inválidos');
 
     return this.buildResponse(professional.id, professional.email, 'professional', professional.name);

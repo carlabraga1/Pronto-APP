@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { colors } from '../../constants/colors';
@@ -7,97 +7,37 @@ export default function WelcomeScreen() {
   const navigation = useNavigation<any>();
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.content}>
-        <Text style={styles.logoText}>Pronto</Text>
+    <SafeAreaView className="flex-1 bg-bgDark px-6">
+      <View className="flex-1 justify-center items-center">
+        <Text className="text-brand text-4xl font-extrabold tracking-wide mb-12">
+          Pronto
+        </Text>
 
-        <Text style={styles.title}>
+        <Text className="text-white text-[28px] font-bold text-center leading-9 mb-3">
           Resolva qualquer serviço{'\n'}em minutos
         </Text>
-        <Text style={styles.subtitle}>
+        <Text className="text-textSecondary text-base text-center leading-[22px] px-5">
           Conecte-se a profissionais confiáveis perto de você
         </Text>
       </View>
 
-      <View style={styles.buttons}>
+      <View className="gap-3 pb-6">
         <TouchableOpacity
-          style={styles.primaryBtn}
+          className="bg-brand rounded-[14px] py-4 items-center"
           activeOpacity={0.8}
           onPress={() => navigation.navigate('Login')}
         >
-          <Text style={styles.primaryBtnText}>Entrar</Text>
+          <Text className="text-bgDark text-[17px] font-bold">Entrar</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.outlineBtn}
+          className="border-[1.5px] border-brand rounded-[14px] py-4 items-center"
           activeOpacity={0.8}
           onPress={() => navigation.navigate('Register')}
         >
-          <Text style={styles.outlineBtnText}>Criar conta</Text>
+          <Text className="text-brand text-[17px] font-bold">Criar conta</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.backgroundDark,
-    paddingHorizontal: 24,
-  },
-  content: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  logoText: {
-    color: colors.brand,
-    fontSize: 36,
-    fontWeight: '800',
-    letterSpacing: 1,
-    marginBottom: 48,
-  },
-  title: {
-    color: colors.textPrimary,
-    fontSize: 28,
-    fontWeight: '700',
-    textAlign: 'center',
-    lineHeight: 36,
-    marginBottom: 12,
-  },
-  subtitle: {
-    color: colors.textSecondary,
-    fontSize: 16,
-    textAlign: 'center',
-    lineHeight: 22,
-    paddingHorizontal: 20,
-  },
-  buttons: {
-    gap: 12,
-    paddingBottom: 24,
-  },
-  primaryBtn: {
-    backgroundColor: colors.brand,
-    borderRadius: 14,
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
-  primaryBtnText: {
-    color: colors.backgroundDark,
-    fontSize: 17,
-    fontWeight: '700',
-  },
-  outlineBtn: {
-    borderWidth: 1.5,
-    borderColor: colors.brand,
-    borderRadius: 14,
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
-  outlineBtnText: {
-    color: colors.brand,
-    fontSize: 17,
-    fontWeight: '700',
-  },
-});

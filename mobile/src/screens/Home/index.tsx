@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
   TextInput,
   ScrollView,
@@ -42,7 +41,6 @@ type SearchItem = {
 export default function HomeScreen() {
   const navigation = useNavigation<any>();
   const route = useRoute<any>();
-
   const [address, setAddress] = useState('');
   const [loadingLocation, setLoadingLocation] = useState(true);
   const [activeOrder, setActiveOrder] = useState<any>(null);
@@ -57,7 +55,6 @@ export default function HomeScreen() {
         const { data } = await api.post('/categories/sync', CATEGORIES);
         setCategories(data);
       } catch {
-        // Fallback: buscar categorias existentes
         try {
           const { data } = await api.get('/categories');
           setCategories(data);
@@ -85,7 +82,7 @@ export default function HomeScreen() {
     }, [])
   );
 
-  // Montar lista de serviços pesquisáveis a partir das categorias do backend
+  // Montar lista de serviços pesquisáveis
   const allServices: SearchItem[] = categories.flatMap((cat) => {
     const subs = (cat.subcategories || []).map((sub) => ({
       id: `sub-${sub.id}`,
@@ -160,17 +157,17 @@ export default function HomeScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
+    <SafeAreaView className="flex-1 pt-[15px] bg-bgDark">
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="px-5 pb-5">
 
         {/* Header - Logo + Notificação */}
-        <View style={styles.headerRow}>
+        <View className="flex-row justify-between items-center pt-2">
           <View>
-            <Text style={styles.logo}>Pronto</Text>
-            <Text style={styles.subtitle}>Serviços rápidos</Text>
+            <Text className="text-brand text-[28px] font-bold">Pronto</Text>
+            <Text className="text-textSecondary text-[13px] mt-0.5">Serviços rápidos</Text>
           </View>
           <TouchableOpacity
-            style={styles.notificationBtn}
+            className="w-11 h-11 rounded-full bg-surface items-center justify-center"
             activeOpacity={0.7}
             onPress={() => navigation.navigate('Notifications')}
           >
@@ -180,30 +177,32 @@ export default function HomeScreen() {
 
         {/* Localização */}
         <TouchableOpacity
-          style={styles.locationBox}
+          className="flex-row items-center bg-surface rounded-[14px] px-3.5 py-3.5 gap-2.5 mt-4 mb-3"
           activeOpacity={0.7}
           onPress={() => navigation.navigate('Location')}
         >
           <MapPin size={18} color={colors.brand} />
           {loadingLocation ? (
-            <View style={styles.loadingRow}>
+            <View className="flex-1 flex-row items-center gap-2">
               <ActivityIndicator size="small" color={colors.brand} />
-              <Text style={styles.loadingText}>Buscando localização...</Text>
+              <Text className="text-textSecondary text-sm">Buscando localização...</Text>
             </View>
           ) : (
-            <View style={styles.locationInfo}>
-              <Text style={styles.locationLabel}>Enviar para</Text>
-              <Text style={styles.locationAddress} numberOfLines={1}>{address}</Text>
+            <View className="flex-1">
+              <Text className="text-textSecondary text-[11px]">Enviar para</Text>
+              <Text className="text-white text-[15px] font-semibold mt-0.5" numberOfLines={1}>
+                {address}
+              </Text>
             </View>
           )}
           <ChevronRight size={18} color={colors.textSecondary} />
         </TouchableOpacity>
 
         {/* Busca */}
-        <View style={styles.searchBox}>
+        <View className="flex-row items-center bg-surface rounded-[14px] px-4 py-3.5 gap-3 mb-7">
           <Search size={18} color={colors.textSecondary} />
           <TextInput
-            style={styles.searchInput}
+            className="flex-1 text-white text-base"
             placeholder="Qual serviço você precisa?"
             placeholderTextColor={colors.textSecondary}
             value={searchQuery}
@@ -211,27 +210,27 @@ export default function HomeScreen() {
           />
           {searchQuery.length > 0 && (
             <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <Text style={styles.searchClear}>✕</Text>
+              <Text className="text-textSecondary text-base p-1">✕</Text>
             </TouchableOpacity>
           )}
         </View>
 
         {/* Resultados da busca */}
         {searchResults.length > 0 && (
-          <View style={styles.searchResults}>
+          <View className="bg-surface rounded-[14px] -mt-5 mb-5 overflow-hidden">
             {searchResults.map((item) => {
               const ItemIcon = getIcon(item.categoryIcon);
               return (
                 <TouchableOpacity
                   key={item.id}
-                  style={styles.searchResultItem}
+                  className="flex-row items-center gap-3 px-4 py-3.5 border-b border-white/5"
                   activeOpacity={0.7}
                   onPress={() => handleSearchSelect(item)}
                 >
                   <ItemIcon size={20} color={colors.brand} />
-                  <View style={styles.searchResultText}>
-                    <Text style={styles.searchResultName}>{item.name}</Text>
-                    <Text style={styles.searchResultCategory}>{item.categoryName}</Text>
+                  <View className="flex-1">
+                    <Text className="text-white text-[15px] font-medium">{item.name}</Text>
+                    <Text className="text-textSecondary text-xs mt-0.5">{item.categoryName}</Text>
                   </View>
                 </TouchableOpacity>
               );
@@ -240,30 +239,32 @@ export default function HomeScreen() {
         )}
 
         {searchQuery.length >= 2 && searchResults.length === 0 && (
-          <View style={styles.searchEmpty}>
-            <Text style={styles.searchEmptyText}>Nenhum serviço encontrado</Text>
+          <View className="items-center py-4 -mt-5 mb-5">
+            <Text className="text-textSecondary text-sm">Nenhum serviço encontrado</Text>
           </View>
         )}
 
         {/* Categorias */}
-        <Text style={styles.sectionTitle}>Categorias</Text>
+        <Text className="text-white text-xl font-bold mb-4">Categorias</Text>
         {loadingCategories ? (
           <ActivityIndicator size="small" color={colors.brand} style={{ marginVertical: 20 }} />
         ) : (
-          <View style={styles.categoriesGrid}>
+          <View className="flex-row flex-wrap gap-2.5 mb-7">
             {categories.slice(0, 8).map((cat) => {
               const CatIcon = getIcon(cat.icon);
               return (
                 <TouchableOpacity
                   key={cat.id}
-                  style={styles.categoryCard}
+                  className="w-[22%] bg-surface rounded-[14px] py-3 px-1 items-center gap-1.5"
                   activeOpacity={0.7}
                   onPress={() => handleCategory(cat)}
                 >
-                  <View style={styles.iconContainer}>
+                  <View className="w-11 h-11 rounded-xl bg-bgDark items-center justify-center">
                     <CatIcon size={26} color={colors.brand} />
                   </View>
-                  <Text style={styles.categoryName}>{cat.name}</Text>
+                  <Text className="text-white text-[10px] font-semibold text-center leading-[13px]">
+                    {cat.name}
+                  </Text>
                 </TouchableOpacity>
               );
             })}
@@ -273,15 +274,15 @@ export default function HomeScreen() {
         {/* Pedido ativo */}
         {activeOrder && (
           <TouchableOpacity
-            style={styles.activeOrderCard}
+            className="flex-row items-center justify-between bg-surface rounded-2xl p-4 border-l-[3px] border-brand"
             activeOpacity={0.7}
             onPress={() => navigation.navigate('OrderTracking', { orderId: String(activeOrder.id) })}
           >
-            <View style={styles.activeOrderInfo}>
-              <View style={styles.activeOrderDot} />
+            <View className="flex-row items-center gap-3">
+              <View className="w-2.5 h-2.5 rounded-full bg-success" />
               <View>
-                <Text style={styles.activeOrderTitle}>Pedido em andamento</Text>
-                <Text style={styles.activeOrderSub}>
+                <Text className="text-white text-[15px] font-semibold">Pedido em andamento</Text>
+                <Text className="text-textSecondary text-[13px] mt-0.5">
                   {activeOrder.professional?.name
                     ? `${activeOrder.professional.name} - ${activeOrder.category?.name || ''}`
                     : 'Procurando profissional...'}
@@ -296,179 +297,3 @@ export default function HomeScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingTop: 15,
-    backgroundColor: colors.backgroundDark,
-  },
-  scroll: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: 8,
-  },
-  logo: {
-    color: colors.brand,
-    fontSize: 28,
-    fontWeight: 'bold',
-  },
-  subtitle: {
-    color: colors.textSecondary,
-    fontSize: 13,
-    marginTop: 2,
-  },
-  notificationBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  notificationBadge: {
-    position: 'absolute',
-    top: 6,
-    right: 6,
-    minWidth: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: colors.danger,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 4,
-  },
-  notificationBadgeText: {
-    color: colors.textPrimary,
-    fontSize: 10,
-    fontWeight: '700',
-  },
-  locationBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    paddingVertical: 14,
-    gap: 10,
-    marginTop: 16,
-    marginBottom: 12,
-  },
-  locationInfo: { flex: 1 },
-  locationLabel: { color: colors.textSecondary, fontSize: 11 },
-  locationAddress: {
-    color: colors.textPrimary,
-    fontSize: 15,
-    fontWeight: '600',
-    marginTop: 2,
-  },
-  loadingRow: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  loadingText: { color: colors.textSecondary, fontSize: 14 },
-  searchBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    gap: 12,
-    marginBottom: 28,
-  },
-  searchInput: { flex: 1, color: colors.textPrimary, fontSize: 16 },
-  searchClear: { color: colors.textSecondary, fontSize: 16, padding: 4 },
-  searchResults: {
-    backgroundColor: colors.surface,
-    borderRadius: 14,
-    marginTop: -20,
-    marginBottom: 20,
-    overflow: 'hidden',
-  },
-  searchResultItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.05)',
-  },
-  searchResultIcon: { width: 20 },
-  searchResultText: { flex: 1 },
-  searchResultName: { color: colors.textPrimary, fontSize: 15, fontWeight: '500' },
-  searchResultCategory: { color: colors.textSecondary, fontSize: 12, marginTop: 2 },
-  searchEmpty: {
-    alignItems: 'center',
-    paddingVertical: 16,
-    marginTop: -20,
-    marginBottom: 20,
-  },
-  searchEmptyText: { color: colors.textSecondary, fontSize: 14 },
-  sectionTitle: {
-    color: colors.textPrimary,
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 16,
-  },
-  categoriesGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-    marginBottom: 28,
-  },
-  categoryCard: {
-    width: '22%',
-    backgroundColor: colors.surface,
-    borderRadius: 14,
-    paddingVertical: 12,
-    paddingHorizontal: 4,
-    alignItems: 'center',
-    gap: 6,
-  },
-  iconContainer: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: colors.backgroundDark,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  categoryIcon: {
-    width: 26,
-  },
-  categoryName: {
-    color: colors.textPrimary,
-    fontSize: 10,
-    fontWeight: '600',
-    textAlign: 'center',
-    lineHeight: 13,
-  },
-  activeOrderCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: colors.surface,
-    borderRadius: 16,
-    padding: 16,
-    borderLeftWidth: 3,
-    borderLeftColor: colors.brand,
-  },
-  activeOrderInfo: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  activeOrderDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    backgroundColor: colors.success,
-  },
-  activeOrderTitle: { color: colors.textPrimary, fontSize: 15, fontWeight: '600' },
-  activeOrderSub: { color: colors.textSecondary, fontSize: 13, marginTop: 2 },
-});

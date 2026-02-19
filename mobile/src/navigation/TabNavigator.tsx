@@ -20,7 +20,7 @@ export default function TabNavigator() {
         headerShown: false,
         tabBarStyle: {
           backgroundColor: colors.surface,
-          borderTopColor: 'rgba(255, 255, 255, 0.05)',
+          borderTopColor: 'rgba(255,255,255,0.05)',
           borderTopWidth: 1,
           height: tabBarHeight,
           paddingBottom: bottomPadding,
@@ -36,7 +36,7 @@ export default function TabNavigator() {
       }}
     >
       <Tab.Screen
-        name="Início"
+        name="Inicio"
         component={HomeScreen}
         options={{
           tabBarIcon: ({ color, size }) => <Home size={size} color={color} />,

@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   TextInput,
   TouchableOpacity,
   FlatList,
@@ -155,22 +154,25 @@ export default function LocationScreen({ navigation, route }: any) {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView className="flex-1 bg-bgDark">
       {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+      <View className="flex-row items-center justify-between px-4 py-3">
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          className="w-10 h-10 rounded-full bg-surface items-center justify-center"
+        >
           <ArrowLeft size={22} color={colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Escolher localização</Text>
-        <View style={{ width: 40 }} />
+        <Text className="text-white text-[17px] font-semibold">Escolher localização</Text>
+        <View className="w-10" />
       </View>
 
       {/* Busca */}
-      <View style={styles.searchContainer}>
-        <View style={styles.searchBox}>
+      <View className="px-4 z-10">
+        <View className="flex-row items-center bg-surface rounded-[14px] px-3.5 gap-2.5">
           <MapPin size={18} color={colors.brand} />
           <TextInput
-            style={styles.searchInput}
+            className="flex-1 text-white text-[15px] py-3.5"
             value={query}
             onChangeText={handleQueryChange}
             placeholder="Buscar endereço..."
@@ -181,18 +183,18 @@ export default function LocationScreen({ navigation, route }: any) {
         </View>
 
         {results.length > 0 && (
-          <View style={styles.resultsList}>
+          <View className="bg-surface rounded-[14px] mt-1 max-h-[220px] overflow-hidden">
             <FlatList
               data={results}
               keyExtractor={(item) => String(item.place_id)}
               keyboardShouldPersistTaps="handled"
               renderItem={({ item }) => (
                 <TouchableOpacity
-                  style={styles.resultItem}
+                  className="flex-row items-center gap-2.5 px-3.5 py-3.5 border-b border-white/5"
                   onPress={() => handleSelectResult(item)}
                 >
                   <MapPin size={16} color={colors.textSecondary} />
-                  <Text style={styles.resultText} numberOfLines={2}>
+                  <Text className="flex-1 text-white text-sm" numberOfLines={2}>
                     {item.display_name}
                   </Text>
                 </TouchableOpacity>
@@ -203,31 +205,35 @@ export default function LocationScreen({ navigation, route }: any) {
       </View>
 
       {/* Mapa */}
-      <View style={styles.mapContainer}>
-        <MapView ref={mapRef} style={styles.map} region={region} onPress={handleMapPress} provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined}>
+      <View className="flex-1 mt-3">
+        <MapView ref={mapRef} style={{ flex: 1 }} region={region} onPress={handleMapPress} provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined}>
           <Marker coordinate={markerCoord} />
         </MapView>
 
-        <TouchableOpacity style={styles.gpsFloating} onPress={handleUseGps} activeOpacity={0.7}>
+        <TouchableOpacity
+          className="absolute bottom-4 right-4 w-12 h-12 rounded-full bg-surface items-center justify-center shadow-lg"
+          onPress={handleUseGps}
+          activeOpacity={0.7}
+        >
           <LocateFixed size={22} color={colors.brand} />
         </TouchableOpacity>
       </View>
 
       {/* Footer */}
-      <View style={styles.footer}>
-        <View style={styles.footerAddress}>
+      <View className="bg-surface px-5 py-4 rounded-t-[20px] gap-3.5">
+        <View className="flex-row items-center gap-2.5">
           <MapPin size={16} color={colors.brand} />
-          <Text style={styles.footerAddressText} numberOfLines={2}>
+          <Text className="flex-1 text-white text-[15px]" numberOfLines={2}>
             {selectedAddress || 'Toque no mapa ou busque um endereço'}
           </Text>
         </View>
         <TouchableOpacity
-          style={[styles.confirmBtn, !selectedAddress && styles.confirmBtnDisabled]}
+          className={`bg-brand rounded-[14px] py-4 items-center ${!selectedAddress ? 'opacity-40' : ''}`}
           onPress={handleConfirm}
           disabled={!selectedAddress}
           activeOpacity={0.7}
         >
-          <Text style={styles.confirmBtnText}>
+          <Text className="text-bgDark text-base font-bold">
             {returnTo === 'AddAddress' ? 'Usar este endereço' : 'Confirmar'}
           </Text>
         </TouchableOpacity>
@@ -235,86 +241,3 @@ export default function LocationScreen({ navigation, route }: any) {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.backgroundDark },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: { color: colors.textPrimary, fontSize: 17, fontWeight: '600' },
-  searchContainer: { paddingHorizontal: 16, zIndex: 10 },
-  searchBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderRadius: 14,
-    paddingHorizontal: 14,
-    gap: 10,
-  },
-  searchInput: { flex: 1, color: colors.textPrimary, fontSize: 15, paddingVertical: 14 },
-  resultsList: {
-    backgroundColor: colors.surface,
-    borderRadius: 14,
-    marginTop: 4,
-    maxHeight: 220,
-    overflow: 'hidden',
-  },
-  resultItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingHorizontal: 14,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.05)',
-  },
-  resultText: { flex: 1, color: colors.textPrimary, fontSize: 14 },
-  mapContainer: { flex: 1, marginTop: 12 },
-  map: { flex: 1 },
-  gpsFloating: {
-    position: 'absolute',
-    bottom: 16,
-    right: 16,
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-  },
-  footer: {
-    backgroundColor: colors.surface,
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    gap: 14,
-  },
-  footerAddress: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  footerAddressText: { flex: 1, color: colors.textPrimary, fontSize: 15 },
-  confirmBtn: {
-    backgroundColor: colors.brand,
-    borderRadius: 14,
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
-  confirmBtnDisabled: { opacity: 0.4 },
-  confirmBtnText: { color: colors.backgroundDark, fontSize: 16, fontWeight: 'bold' },
-});

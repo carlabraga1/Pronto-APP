@@ -3,7 +3,6 @@ import {
   View,
   Text,
   Image,
-  StyleSheet,
   TouchableOpacity,
   ScrollView,
   Alert,
@@ -32,9 +31,9 @@ import { useAuth } from '../../contexts/AuthContext';
 type ProfileNav = NativeStackNavigationProp<RootStackParamList>;
 
 const menuItems = [
-  { id: '1', label: 'Meus Endereços', icon: MapPinned },
-  { id: '2', label: 'Métodos de Pagamento', icon: CreditCard },
-  { id: '4', label: 'Notificações', icon: BellDot },
+  { id: '1', label: 'Meus Enderecos', icon: MapPinned },
+  { id: '2', label: 'Metodos de Pagamento', icon: CreditCard },
+  { id: '4', label: 'Notificacoes', icon: BellDot },
   { id: '5', label: 'Ajuda e Suporte', icon: CircleHelp },
   { id: '6', label: 'Sobre o Pronto', icon: Info },
 ];
@@ -49,9 +48,9 @@ export default function ProfileScreen() {
   }, [fetchProfile]);
 
   const handleMenuItem = (label: string) => {
-    if (label === 'Notificações') {
+    if (label === 'Notificacoes') {
       navigation.navigate('Notifications');
-    } else if (label === 'Meus Endereços') {
+    } else if (label === 'Meus Enderecos') {
       navigation.navigate('MyAddresses');
     } else {
       Alert.alert(label, 'Em breve');
@@ -66,34 +65,38 @@ export default function ProfileScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView className="flex-1 bg-bgDark px-5" edges={['top']}>
       <ScrollView showsVerticalScrollIndicator={false}>
-        {/* Título */}
-        <Text style={styles.title}>Perfil</Text>
+        {/* Titulo */}
+        <Text className="text-white text-2xl font-bold py-4">Perfil</Text>
 
-        {/* Card do usuário */}
+        {/* Card do usuario */}
         <TouchableOpacity
-          style={styles.userCard}
+          className="flex-row items-center justify-between bg-surface rounded-2xl p-4 mb-6"
           activeOpacity={0.7}
           onPress={() => navigation.navigate('EditProfile')}
         >
-          <View style={styles.userInfo}>
-            <View style={styles.avatar}>
+          <View className="flex-row items-center gap-3.5">
+            <View className="w-14 h-14 rounded-full bg-bgDark items-center justify-center overflow-hidden">
               {profile?.profileImage ? (
-                <Image source={{ uri: profile.profileImage }} style={styles.avatarImage} />
+                <Image source={{ uri: profile.profileImage }} className="w-full h-full" />
               ) : (
                 <UserRound size={32} color={colors.textSecondary} />
               )}
             </View>
-            <View style={styles.userText}>
+            <View className="gap-1">
               {loadingProfile ? (
                 <ActivityIndicator size="small" color={colors.brand} />
               ) : (
                 <>
-                  <Text style={styles.userName}>{profile?.name || 'Usuário'}</Text>
-                  <View style={styles.ratingRow}>
+                  <Text className="text-white text-lg font-bold">
+                    {profile?.name || 'Usuario'}
+                  </Text>
+                  <View className="flex-row items-center gap-1">
                     <Star size={14} color={colors.brand} fill={colors.brand} />
-                    <Text style={styles.ratingText}>{profile?.rating?.toFixed(1) || '0.0'}</Text>
+                    <Text className="text-brand text-sm font-semibold">
+                      {profile?.rating?.toFixed(1) || '0.0'}
+                    </Text>
                   </View>
                 </>
               )}
@@ -102,22 +105,28 @@ export default function ProfileScreen() {
           <ChevronRight size={20} color={colors.textSecondary} />
         </TouchableOpacity>
 
-        {/* Serviços favoritos */}
+        {/* Servicos favoritos */}
         {profile?.favorites && profile.favorites.length > 0 && (
-          <View style={styles.favSection}>
-            <View style={styles.favHeader}>
-              <Text style={styles.favTitle}>Serviços favoritos</Text>
+          <View className="mb-6">
+            <View className="flex-row justify-between items-center mb-3">
+              <Text className="text-white text-[17px] font-bold">Servicos favoritos</Text>
               <TouchableOpacity activeOpacity={0.7}>
-                <Text style={styles.favSeeAll}>Ver todos</Text>
+                <Text className="text-brand text-[13px] font-semibold">Ver todos</Text>
               </TouchableOpacity>
             </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.favList}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2.5">
               {profile.favorites.map((item) => (
-                <TouchableOpacity key={item.id} style={styles.favCard} activeOpacity={0.7}>
-                  <View style={styles.favIcon}>
-                    <Text style={styles.favIconText}>{item.subcategory.icon}</Text>
+                <TouchableOpacity
+                  key={item.id}
+                  className="bg-surface rounded-[14px] py-3.5 px-4 items-center gap-2 w-[100px]"
+                  activeOpacity={0.7}
+                >
+                  <View className="w-11 h-11 rounded-xl bg-bgDark items-center justify-center">
+                    <Text className="text-[22px]">{item.subcategory.icon}</Text>
                   </View>
-                  <Text style={styles.favName}>{item.subcategory.name}</Text>
+                  <Text className="text-white text-[11px] font-semibold text-center">
+                    {item.subcategory.name}
+                  </Text>
                   <Heart size={12} color={colors.danger} fill={colors.danger} />
                 </TouchableOpacity>
               ))}
@@ -125,20 +134,20 @@ export default function ProfileScreen() {
           </View>
         )}
 
-        {/* Menu de opções */}
-        <View style={styles.menuContainer}>
+        {/* Menu de opcoes */}
+        <View className="bg-surface rounded-2xl overflow-hidden mb-7">
           {menuItems.map((item) => {
             const Icon = item.icon;
             return (
               <TouchableOpacity
                 key={item.id}
-                style={styles.menuItem}
+                className="flex-row items-center justify-between px-4 py-4 border-b border-white/5"
                 activeOpacity={0.7}
                 onPress={() => handleMenuItem(item.label)}
               >
-                <View style={styles.menuLeft}>
+                <View className="flex-row items-center gap-3.5">
                   <Icon size={20} color={colors.textSecondary} />
-                  <Text style={styles.menuLabel}>{item.label}</Text>
+                  <Text className="text-white text-[15px] font-medium">{item.label}</Text>
                 </View>
                 <ChevronRight size={18} color={colors.textSecondary} />
               </TouchableOpacity>
@@ -147,163 +156,15 @@ export default function ProfileScreen() {
         </View>
 
         {/* Sair */}
-        <TouchableOpacity style={styles.logoutBtn} activeOpacity={0.7} onPress={handleLogout}>
+        <TouchableOpacity
+          className="flex-row items-center justify-center gap-2 py-4 mb-5"
+          activeOpacity={0.7}
+          onPress={handleLogout}
+        >
           <LogOut size={18} color={colors.danger} />
-          <Text style={styles.logoutText}>Sair da conta</Text>
+          <Text className="text-danger text-base font-semibold">Sair da conta</Text>
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.backgroundDark,
-    paddingHorizontal: 20,
-  },
-  title: {
-    color: colors.textPrimary,
-    fontSize: 24,
-    fontWeight: 'bold',
-    paddingVertical: 16,
-  },
-
-  // Card do usuário
-  userCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: colors.surface,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 24,
-  },
-  userInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-  },
-  avatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: colors.backgroundDark,
-    alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
-  },
-  avatarImage: {
-    width: '100%',
-    height: '100%',
-  },
-  userText: {
-    gap: 4,
-  },
-  userName: {
-    color: colors.textPrimary,
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  ratingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  ratingText: {
-    color: colors.brand,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  // Favoritos
-  favSection: {
-    marginBottom: 24,
-  },
-  favHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  favTitle: {
-    color: colors.textPrimary,
-    fontSize: 17,
-    fontWeight: '700',
-  },
-  favSeeAll: {
-    color: colors.brand,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  favList: {
-    gap: 10,
-  },
-  favCard: {
-    backgroundColor: colors.surface,
-    borderRadius: 14,
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-    gap: 8,
-    width: 100,
-  },
-  favIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: colors.backgroundDark,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  favIconText: {
-    fontSize: 22,
-  },
-  favName: {
-    color: colors.textPrimary,
-    fontSize: 11,
-    fontWeight: '600',
-    textAlign: 'center',
-  },
-
-  // Menu
-  menuContainer: {
-    backgroundColor: colors.surface,
-    borderRadius: 16,
-    overflow: 'hidden',
-    marginBottom: 28,
-  },
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.05)',
-  },
-  menuLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-  },
-  menuLabel: {
-    color: colors.textPrimary,
-    fontSize: 15,
-    fontWeight: '500',
-  },
-
-  // Logout
-  logoutBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 16,
-    marginBottom: 20,
-  },
-  logoutText: {
-    color: colors.danger,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-});

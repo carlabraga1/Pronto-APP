@@ -2,7 +2,6 @@ import { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
   TextInput,
   FlatList,
@@ -59,15 +58,12 @@ export default function ChatScreen() {
 
   const loadChat = async () => {
     try {
-      // Buscar dados do pedido para mostrar o profissional no header
       const { data: order } = await api.get(`/requests/${orderId}`);
       setOrderData(order);
 
-      // Buscar mensagens do chat
       const { data: chat } = await api.get(`/requests/${orderId}/chat`);
       setMessages(chat.messages || []);
 
-      // Conectar Socket.IO
       connectSocket();
     } catch (err) {
       console.log('Erro ao carregar chat:', err);
@@ -87,7 +83,6 @@ export default function ChatScreen() {
 
     socket.on('new_message', (message: Message) => {
       setMessages((prev) => {
-        // Evitar duplicatas
         if (prev.some((m) => m.id === message.id)) return prev;
         return [...prev, message];
       });
@@ -120,35 +115,27 @@ export default function ChatScreen() {
 
     return (
       <View
-        style={[
-          styles.messageBubbleWrapper,
-          isClient ? styles.clientWrapper : styles.proWrapper,
-        ]}
+        className={`flex-row items-end gap-2 max-w-[85%] ${
+          isClient ? 'self-end' : 'self-start'
+        }`}
       >
         {!isClient && (
-          <View style={styles.bubbleAvatar}>
+          <View className="w-[26px] h-[26px] rounded-full bg-surface items-center justify-center mb-0.5">
             <UserRound size={14} color={colors.textSecondary} />
           </View>
         )}
         <View
-          style={[
-            styles.messageBubble,
-            isClient ? styles.clientBubble : styles.proBubble,
-          ]}
+          className={`rounded-2xl px-3.5 py-2.5 ${
+            isClient ? 'bg-brand rounded-br-[4px]' : 'bg-surface rounded-bl-[4px]'
+          }`}
         >
-          <Text
-            style={[
-              styles.messageText,
-              isClient ? styles.clientText : styles.proText,
-            ]}
-          >
+          <Text className={`text-sm leading-5 ${isClient ? 'text-bgDark' : 'text-white'}`}>
             {item.text}
           </Text>
           <Text
-            style={[
-              styles.messageTime,
-              isClient ? styles.clientTime : styles.proTime,
-            ]}
+            className={`text-[10px] mt-1 self-end ${
+              isClient ? 'text-bgDark/50' : 'text-textSecondary'
+            }`}
           >
             {formatTime(item.createdAt)}
           </Text>
@@ -159,15 +146,15 @@ export default function ChatScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container} edges={['top']}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+      <SafeAreaView className="flex-1 bg-bgDark" edges={['top']}>
+        <View className="flex-row items-center justify-between px-4 py-3 border-b border-white/[0.06]">
+          <TouchableOpacity onPress={() => navigation.goBack()} className="w-10 h-10 items-center justify-center">
             <ArrowLeft size={22} color={colors.textPrimary} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Chat</Text>
-          <View style={styles.backBtn} />
+          <Text className="text-white text-lg font-bold">Chat</Text>
+          <View className="w-10 h-10" />
         </View>
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <View className="flex-1 justify-center items-center">
           <ActivityIndicator size="large" color={colors.brand} />
         </View>
       </SafeAreaView>
@@ -179,41 +166,40 @@ export default function ChatScreen() {
   const proId = orderData?.professional?.id ? String(orderData.professional.id) : '1';
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView className="flex-1 bg-bgDark" edges={['top']}>
       {/* Header */}
-      <View style={styles.header}>
+      <View className="flex-row items-center justify-between px-4 py-3 border-b border-white/[0.06]">
         <TouchableOpacity
           onPress={() => navigation.goBack()}
-          style={styles.backBtn}
+          className="w-10 h-10 items-center justify-center"
           activeOpacity={0.7}
         >
           <ArrowLeft size={22} color={colors.textPrimary} />
         </TouchableOpacity>
         <TouchableOpacity
-          style={styles.headerCenter}
+          className="flex-row items-center gap-2.5"
           activeOpacity={0.7}
           onPress={() => navigation.navigate('ProfessionalProfile', { professionalId: proId })}
         >
-          <View style={styles.headerAvatar}>
+          <View className="w-[38px] h-[38px] rounded-full bg-surface items-center justify-center">
             <UserRound size={20} color={colors.textSecondary} />
           </View>
           <View>
-            <Text style={styles.headerName}>{proName}</Text>
-            <View style={styles.headerMeta}>
+            <Text className="text-white text-[15px] font-semibold">{proName}</Text>
+            <View className="flex-row items-center gap-1">
               <Star size={10} color={colors.brand} fill={colors.brand} />
-              <Text style={styles.headerRating}>{proRating}</Text>
-              <Text style={styles.headerStatus}>Online</Text>
+              <Text className="text-brand text-xs font-semibold">{proRating}</Text>
+              <Text className="text-success text-[11px] ml-1.5">Online</Text>
             </View>
           </View>
           <ChevronRight size={16} color={colors.textSecondary} />
         </TouchableOpacity>
-        <View style={styles.backBtn} />
+        <View className="w-10 h-10" />
       </View>
 
       <KeyboardAvoidingView
-        style={styles.flex}
+        className="flex-1"
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'android' ? 0 : 0}
       >
         {/* Messages */}
         <FlatList
@@ -221,16 +207,16 @@ export default function ChatScreen() {
           data={messages}
           keyExtractor={(item) => String(item.id)}
           renderItem={renderMessage}
-          contentContainerStyle={styles.messagesList}
+          contentContainerClassName="px-4 py-4 gap-2.5"
           showsVerticalScrollIndicator={false}
           onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
         />
 
         {/* Input bar */}
-        <View style={styles.inputBar}>
-          <View style={styles.inputWrapper}>
+        <View className="flex-row items-end px-4 py-3 gap-2.5 border-t border-white/[0.06]">
+          <View className="flex-1 bg-surface rounded-[20px] px-4 py-2.5 max-h-[120px]">
             <TextInput
-              style={styles.input}
+              className="text-white text-[15px] leading-5 max-h-20"
               value={inputText}
               onChangeText={setInputText}
               placeholder="Digite sua mensagem..."
@@ -240,7 +226,9 @@ export default function ChatScreen() {
             />
           </View>
           <TouchableOpacity
-            style={[styles.sendBtn, !inputText.trim() && styles.sendBtnDisabled]}
+            className={`w-11 h-11 rounded-full items-center justify-center ${
+              inputText.trim() ? 'bg-brand' : 'bg-surface'
+            }`}
             onPress={handleSend}
             activeOpacity={0.7}
             disabled={!inputText.trim()}
@@ -252,36 +240,3 @@ export default function ChatScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.backgroundDark },
-  flex: { flex: 1 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.06)' },
-  backBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { color: colors.textPrimary, fontSize: 18, fontWeight: '700' },
-  headerCenter: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  headerAvatar: { width: 38, height: 38, borderRadius: 19, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
-  headerName: { color: colors.textPrimary, fontSize: 15, fontWeight: '600' },
-  headerMeta: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  headerRating: { color: colors.brand, fontSize: 12, fontWeight: '600' },
-  headerStatus: { color: colors.success, fontSize: 11, marginLeft: 6 },
-  messagesList: { paddingHorizontal: 16, paddingVertical: 16, gap: 10 },
-  messageBubbleWrapper: { flexDirection: 'row', alignItems: 'flex-end', gap: 8, maxWidth: '85%' },
-  clientWrapper: { alignSelf: 'flex-end' },
-  proWrapper: { alignSelf: 'flex-start' },
-  bubbleAvatar: { width: 26, height: 26, borderRadius: 13, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center', marginBottom: 2 },
-  messageBubble: { borderRadius: 16, paddingHorizontal: 14, paddingVertical: 10, maxWidth: '100%' },
-  clientBubble: { backgroundColor: colors.brand, borderBottomRightRadius: 4 },
-  proBubble: { backgroundColor: colors.surface, borderBottomLeftRadius: 4 },
-  messageText: { fontSize: 14, lineHeight: 20 },
-  clientText: { color: colors.backgroundDark },
-  proText: { color: colors.textPrimary },
-  messageTime: { fontSize: 10, marginTop: 4, alignSelf: 'flex-end' },
-  clientTime: { color: 'rgba(18, 18, 18, 0.5)' },
-  proTime: { color: colors.textSecondary },
-  inputBar: { flexDirection: 'row', alignItems: 'flex-end', paddingHorizontal: 16, paddingVertical: 12, gap: 10, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)' },
-  inputWrapper: { flex: 1, backgroundColor: colors.surface, borderRadius: 20, paddingHorizontal: 16, paddingVertical: 10, maxHeight: 120 },
-  input: { color: colors.textPrimary, fontSize: 15, lineHeight: 20, maxHeight: 80 },
-  sendBtn: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.brand, alignItems: 'center', justifyContent: 'center' },
-  sendBtnDisabled: { backgroundColor: colors.surface },
-});

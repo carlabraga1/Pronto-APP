@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
   TextInput,
   ScrollView,
@@ -67,38 +66,40 @@ export default function CreateOrderScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
+    <SafeAreaView className="flex-1 bg-bgDark" edges={['top']}>
+      <View className="flex-row items-center justify-between px-5 py-3.5">
         <TouchableOpacity
           onPress={() => navigation.goBack()}
-          style={styles.backBtn}
+          className="w-10 h-10 items-center justify-center"
           activeOpacity={0.7}
         >
           <ArrowLeft size={22} color={colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Novo Pedido</Text>
-        <View style={styles.backBtn} />
+        <Text className="text-white text-lg font-bold">Novo Pedido</Text>
+        <View className="w-10 h-10" />
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-        {/* Serviço selecionado */}
-        <View style={styles.serviceCard}>
-          <View style={styles.serviceIcon}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="px-5">
+        {/* Servico selecionado */}
+        <View className="flex-row items-center gap-3.5 bg-surface rounded-[14px] p-4 mb-6">
+          <View className="w-[50px] h-[50px] rounded-[14px] bg-bgDark items-center justify-center">
             {(() => { const Icon = getIcon(categoryIcon); return <Icon size={24} color={colors.brand} />; })()}
           </View>
-          <View style={styles.serviceInfo}>
-            <Text style={styles.serviceLabel}>Serviço</Text>
-            <Text style={styles.serviceName}>{service}</Text>
+          <View className="gap-0.5">
+            <Text className="text-textSecondary text-xs">Servico</Text>
+            <Text className="text-white text-[17px] font-bold">{service}</Text>
           </View>
         </View>
 
-        {/* Descrição */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Descreva o problema</Text>
-          <View style={styles.inputCard}>
+        {/* Descricao */}
+        <View className="mb-6">
+          <Text className="text-textSecondary text-[13px] font-semibold uppercase tracking-wide mb-2.5">
+            Descreva o problema
+          </Text>
+          <View className="bg-surface rounded-[14px] p-4">
             <TextInput
-              style={styles.textArea}
-              placeholder="Ex: Tomada não funciona na sala, preciso de reparo urgente..."
+              className="text-white text-[15px] leading-[22px] min-h-[100px]"
+              placeholder="Ex: Tomada nao funciona na sala, preciso de reparo urgente..."
               placeholderTextColor={colors.textSecondary}
               value={description}
               onChangeText={setDescription}
@@ -106,15 +107,17 @@ export default function CreateOrderScreen() {
               numberOfLines={4}
               textAlignVertical="top"
             />
-            <Text style={styles.charCount}>{description.length}/300</Text>
+            <Text className="text-textSecondary text-xs text-right mt-2">{description.length}/300</Text>
           </View>
         </View>
 
-        {/* Endereço */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Endereço</Text>
+        {/* Endereco */}
+        <View className="mb-6">
+          <Text className="text-textSecondary text-[13px] font-semibold uppercase tracking-wide mb-2.5">
+            Endereco
+          </Text>
           <TouchableOpacity
-            style={styles.addressCard}
+            className="flex-row items-center gap-3 bg-surface rounded-[14px] p-4"
             activeOpacity={0.7}
             onPress={() => navigation.navigate('Location')}
           >
@@ -122,50 +125,60 @@ export default function CreateOrderScreen() {
             {loadingAddress ? (
               <ActivityIndicator size="small" color={colors.brand} style={{ flex: 1 }} />
             ) : (
-              <Text style={styles.addressText} numberOfLines={1}>{address}</Text>
+              <Text className="flex-1 text-white text-sm font-medium" numberOfLines={1}>{address}</Text>
             )}
             <ChevronRight size={18} color={colors.textSecondary} />
           </TouchableOpacity>
         </View>
 
-        {/* Horário */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Quando você precisa?</Text>
-          <View style={styles.scheduleRow}>
+        {/* Horario */}
+        <View className="mb-6">
+          <Text className="text-textSecondary text-[13px] font-semibold uppercase tracking-wide mb-2.5">
+            Quando voce precisa?
+          </Text>
+          <View className="flex-row gap-2.5">
             <TouchableOpacity
-              style={[styles.scheduleOption, schedule === 'now' && styles.scheduleActive]}
+              className={`flex-1 flex-row items-center justify-center gap-2 bg-surface rounded-xl py-3.5 ${
+                schedule === 'now' ? 'bg-brand' : ''
+              }`}
               activeOpacity={0.7}
               onPress={() => { setSchedule('now'); setSelectedTime(''); }}
             >
               <Clock size={18} color={schedule === 'now' ? colors.backgroundDark : colors.textSecondary} />
-              <Text style={[styles.scheduleText, schedule === 'now' && styles.scheduleTextActive]}>
+              <Text className={`text-sm font-semibold ${schedule === 'now' ? 'text-bgDark' : 'text-textSecondary'}`}>
                 Agora
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.scheduleOption, schedule === 'scheduled' && styles.scheduleActive]}
+              className={`flex-1 flex-row items-center justify-center gap-2 bg-surface rounded-xl py-3.5 ${
+                schedule === 'scheduled' ? 'bg-brand' : ''
+              }`}
               activeOpacity={0.7}
               onPress={() => setSchedule('scheduled')}
             >
               <CalendarDays size={18} color={schedule === 'scheduled' ? colors.backgroundDark : colors.textSecondary} />
-              <Text style={[styles.scheduleText, schedule === 'scheduled' && styles.scheduleTextActive]}>
+              <Text className={`text-sm font-semibold ${schedule === 'scheduled' ? 'text-bgDark' : 'text-textSecondary'}`}>
                 Agendar
               </Text>
             </TouchableOpacity>
           </View>
 
           {schedule === 'scheduled' && (
-            <View style={styles.timeSlotsContainer}>
-              <Text style={styles.timeSlotsLabel}>Horários disponíveis hoje</Text>
-              <View style={styles.timeSlots}>
+            <View className="mt-4">
+              <Text className="text-textSecondary text-[13px] mb-2.5">Horarios disponiveis hoje</Text>
+              <View className="flex-row flex-wrap gap-2">
                 {timeSlots.map((time) => (
                   <TouchableOpacity
                     key={time}
-                    style={[styles.timeSlot, selectedTime === time && styles.timeSlotActive]}
+                    className={`bg-surface rounded-[10px] px-4 py-2.5 ${
+                      selectedTime === time ? 'bg-brand' : ''
+                    }`}
                     activeOpacity={0.7}
                     onPress={() => setSelectedTime(time)}
                   >
-                    <Text style={[styles.timeSlotText, selectedTime === time && styles.timeSlotTextActive]}>
+                    <Text className={`text-sm font-medium ${
+                      selectedTime === time ? 'text-bgDark' : 'text-textSecondary'
+                    }`}>
                       {time}
                     </Text>
                   </TouchableOpacity>
@@ -175,218 +188,23 @@ export default function CreateOrderScreen() {
           )}
         </View>
 
-        <View style={{ height: 100 }} />
+        <View className="h-[100px]" />
       </ScrollView>
 
-      {/* Botão fixo */}
-      <View style={styles.footer}>
+      {/* Botao fixo */}
+      <View className="absolute bottom-0 left-0 right-0 p-5 pb-[30px] bg-bgDark border-t border-white/5">
         <TouchableOpacity
-          style={[styles.proceedBtn, !canProceed && styles.proceedBtnDisabled]}
+          className={`flex-row items-center justify-center gap-2 bg-brand rounded-[14px] py-4 ${
+            !canProceed ? 'opacity-40' : ''
+          }`}
           activeOpacity={0.7}
           onPress={handleProceed}
           disabled={!canProceed}
         >
           <Search size={18} color={colors.backgroundDark} />
-          <Text style={styles.proceedBtnText}>Confirmar Pedido</Text>
+          <Text className="text-bgDark text-base font-bold">Confirmar Pedido</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.backgroundDark,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    color: colors.textPrimary,
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  content: {
-    paddingHorizontal: 20,
-  },
-
-  // Serviço
-  serviceCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    backgroundColor: colors.surface,
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 24,
-  },
-  serviceIcon: {
-    width: 50,
-    height: 50,
-    borderRadius: 14,
-    backgroundColor: colors.backgroundDark,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  serviceIconImg: {
-    width: 24,
-  },
-  serviceInfo: {
-    gap: 2,
-  },
-  serviceLabel: {
-    color: colors.textSecondary,
-    fontSize: 12,
-  },
-  serviceName: {
-    color: colors.textPrimary,
-    fontSize: 17,
-    fontWeight: '700',
-  },
-
-  // Section
-  section: {
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    color: colors.textSecondary,
-    fontSize: 13,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 10,
-  },
-
-  // Descrição
-  inputCard: {
-    backgroundColor: colors.surface,
-    borderRadius: 14,
-    padding: 16,
-  },
-  textArea: {
-    color: colors.textPrimary,
-    fontSize: 15,
-    lineHeight: 22,
-    minHeight: 100,
-  },
-  charCount: {
-    color: colors.textSecondary,
-    fontSize: 12,
-    textAlign: 'right',
-    marginTop: 8,
-  },
-
-  // Endereço
-  addressCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    backgroundColor: colors.surface,
-    borderRadius: 14,
-    padding: 16,
-  },
-  addressText: {
-    flex: 1,
-    color: colors.textPrimary,
-    fontSize: 14,
-    fontWeight: '500',
-  },
-
-  // Horário
-  scheduleRow: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  scheduleOption: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-    paddingVertical: 14,
-  },
-  scheduleActive: {
-    backgroundColor: colors.brand,
-  },
-  scheduleText: {
-    color: colors.textSecondary,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  scheduleTextActive: {
-    color: colors.backgroundDark,
-  },
-  timeSlotsContainer: {
-    marginTop: 16,
-  },
-  timeSlotsLabel: {
-    color: colors.textSecondary,
-    fontSize: 13,
-    marginBottom: 10,
-  },
-  timeSlots: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  timeSlot: {
-    backgroundColor: colors.surface,
-    borderRadius: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-  },
-  timeSlotActive: {
-    backgroundColor: colors.brand,
-  },
-  timeSlotText: {
-    color: colors.textSecondary,
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  timeSlotTextActive: {
-    color: colors.backgroundDark,
-  },
-
-  // Footer
-  footer: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    padding: 20,
-    paddingBottom: 30,
-    backgroundColor: colors.backgroundDark,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.05)',
-  },
-  proceedBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: colors.brand,
-    borderRadius: 14,
-    paddingVertical: 16,
-  },
-  proceedBtnDisabled: {
-    opacity: 0.4,
-  },
-  proceedBtnText: {
-    color: colors.backgroundDark,
-    fontSize: 16,
-    fontWeight: '700',
-  },
-});

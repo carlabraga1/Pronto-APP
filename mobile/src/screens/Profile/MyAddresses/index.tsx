@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
   FlatList,
   ActivityIndicator,
@@ -70,38 +69,40 @@ export default function MyAddressesScreen() {
   };
 
   const renderItem = ({ item }: { item: Address }) => (
-    <View style={styles.card}>
+    <View className="bg-surface rounded-[14px] overflow-hidden">
       <TouchableOpacity
-        style={styles.cardContent}
+        className="flex-row items-center p-4 gap-3.5"
         activeOpacity={0.7}
         onPress={() => navigation.navigate('AddAddress', { addressId: item.id })}
       >
-        <View style={[styles.iconWrapper, item.isDefault && styles.iconWrapperDefault]}>
+        <View className={`w-11 h-11 rounded-xl items-center justify-center ${
+          item.isDefault ? 'bg-brand/[0.12]' : 'bg-white/5'
+        }`}>
           <MapPin size={20} color={item.isDefault ? colors.brand : colors.textSecondary} />
         </View>
-        <View style={styles.cardText}>
-          <View style={styles.labelRow}>
-            <Text style={styles.cardLabel}>{item.label}</Text>
+        <View className="flex-1 gap-[3px]">
+          <View className="flex-row items-center gap-2">
+            <Text className="text-white text-[15px] font-semibold">{item.label}</Text>
             {item.isDefault && (
-              <View style={styles.defaultBadge}>
-                <Text style={styles.defaultBadgeText}>Principal</Text>
+              <View className="bg-brand/15 px-2 py-0.5 rounded-[10px]">
+                <Text className="text-brand text-[11px] font-semibold">Principal</Text>
               </View>
             )}
           </View>
-          <Text style={styles.cardStreet} numberOfLines={1}>
+          <Text className="text-textSecondary text-[13px]" numberOfLines={1}>
             {item.street}, {item.number}
             {item.complement ? ` - ${item.complement}` : ''}
           </Text>
-          <Text style={styles.cardCity}>
+          <Text className="text-textSecondary text-xs">
             {item.city}, {item.state}
             {item.zipCode ? ` - ${item.zipCode}` : ''}
           </Text>
         </View>
       </TouchableOpacity>
 
-      <View style={styles.cardActions}>
+      <View className="flex-row border-t border-white/5">
         <TouchableOpacity
-          style={styles.actionBtn}
+          className="flex-1 items-center justify-center py-3"
           onPress={() => handleSetDefault(item)}
           activeOpacity={0.7}
         >
@@ -112,14 +113,14 @@ export default function MyAddressesScreen() {
           />
         </TouchableOpacity>
         <TouchableOpacity
-          style={styles.actionBtn}
+          className="flex-1 items-center justify-center py-3"
           onPress={() => navigation.navigate('AddAddress', { addressId: item.id })}
           activeOpacity={0.7}
         >
           <Pencil size={16} color={colors.textSecondary} />
         </TouchableOpacity>
         <TouchableOpacity
-          style={styles.actionBtn}
+          className="flex-1 items-center justify-center py-3"
           onPress={() => handleDelete(item)}
           activeOpacity={0.7}
         >
@@ -130,19 +131,19 @@ export default function MyAddressesScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView className="flex-1 bg-bgDark" edges={['top']}>
       {/* Header */}
-      <View style={styles.header}>
+      <View className="flex-row items-center justify-between px-5 py-3.5">
         <TouchableOpacity
           onPress={() => navigation.goBack()}
-          style={styles.backBtn}
+          className="w-10 h-10 items-center justify-center"
           activeOpacity={0.7}
         >
           <ArrowLeft size={22} color={colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Meus Endereços</Text>
+        <Text className="text-white text-lg font-bold">Meus Endereços</Text>
         <TouchableOpacity
-          style={styles.addBtn}
+          className="w-10 h-10 items-center justify-center"
           activeOpacity={0.7}
           onPress={() => navigation.navigate('AddAddress', {})}
         >
@@ -151,23 +152,23 @@ export default function MyAddressesScreen() {
       </View>
 
       {loadingAddresses ? (
-        <View style={styles.loading}>
+        <View className="flex-1 justify-center items-center">
           <ActivityIndicator size="large" color={colors.brand} />
         </View>
       ) : addresses.length === 0 ? (
-        <View style={styles.empty}>
+        <View className="flex-1 justify-center items-center px-10 gap-3">
           <MapPin size={48} color={colors.textSecondary} />
-          <Text style={styles.emptyTitle}>Nenhum endereço cadastrado</Text>
-          <Text style={styles.emptySubtitle}>
+          <Text className="text-white text-lg font-bold mt-2">Nenhum endereço cadastrado</Text>
+          <Text className="text-textSecondary text-sm text-center leading-5">
             Adicione seu endereço principal para facilitar seus pedidos
           </Text>
           <TouchableOpacity
-            style={styles.emptyBtn}
+            className="flex-row items-center gap-2 bg-brand rounded-[14px] py-3.5 px-6 mt-2"
             activeOpacity={0.7}
             onPress={() => navigation.navigate('AddAddress', {})}
           >
             <Plus size={18} color={colors.backgroundDark} />
-            <Text style={styles.emptyBtnText}>Adicionar endereço</Text>
+            <Text className="text-bgDark text-[15px] font-bold">Adicionar endereço</Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -175,153 +176,10 @@ export default function MyAddressesScreen() {
           data={addresses}
           keyExtractor={(item) => String(item.id)}
           renderItem={renderItem}
-          contentContainerStyle={styles.list}
+          contentContainerClassName="px-5 pb-[30px] gap-3"
           showsVerticalScrollIndicator={false}
         />
       )}
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.backgroundDark,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    color: colors.textPrimary,
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  addBtn: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  loading: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  list: {
-    paddingHorizontal: 20,
-    paddingBottom: 30,
-    gap: 12,
-  },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: 14,
-    overflow: 'hidden',
-  },
-  cardContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    gap: 14,
-  },
-  iconWrapper: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  iconWrapperDefault: {
-    backgroundColor: 'rgba(255,193,7,0.12)',
-  },
-  cardText: {
-    flex: 1,
-    gap: 3,
-  },
-  labelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  cardLabel: {
-    color: colors.textPrimary,
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  defaultBadge: {
-    backgroundColor: 'rgba(255,193,7,0.15)',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 10,
-  },
-  defaultBadgeText: {
-    color: colors.brand,
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  cardStreet: {
-    color: colors.textSecondary,
-    fontSize: 13,
-  },
-  cardCity: {
-    color: colors.textSecondary,
-    fontSize: 12,
-  },
-  cardActions: {
-    flexDirection: 'row',
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.05)',
-  },
-  actionBtn: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-  },
-
-  // Empty state
-  empty: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 40,
-    gap: 12,
-  },
-  emptyTitle: {
-    color: colors.textPrimary,
-    fontSize: 18,
-    fontWeight: '700',
-    marginTop: 8,
-  },
-  emptySubtitle: {
-    color: colors.textSecondary,
-    fontSize: 14,
-    textAlign: 'center',
-    lineHeight: 20,
-  },
-  emptyBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    backgroundColor: colors.brand,
-    borderRadius: 14,
-    paddingVertical: 14,
-    paddingHorizontal: 24,
-    marginTop: 8,
-  },
-  emptyBtnText: {
-    color: colors.backgroundDark,
-    fontSize: 15,
-    fontWeight: '700',
-  },
-});

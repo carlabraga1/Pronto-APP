@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
   ScrollView,
   Alert,
@@ -21,6 +20,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
 import type { RootStackParamList } from '../../@types/navigation';
 import { colors } from '../../constants/colors';
+
 import api from '../../services/api';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -83,7 +83,6 @@ export default function AvailableProfessionalsScreen() {
   const createOrderAndAssign = async (professional: Professional) => {
     setCreating(true);
     try {
-      // 1. Criar o pedido com categoryId e subcategoryId do backend
       const { data: order } = await api.post('/requests', {
         description,
         address,
@@ -92,12 +91,10 @@ export default function AvailableProfessionalsScreen() {
         schedule: schedule === 'Agora' ? 'NOW' : 'SCHEDULED',
       });
 
-      // 2. Atribuir o profissional
       await api.patch(`/requests/${order.id}/assign`, {
         professionalId: professional.id,
       });
 
-      // 3. Navegar para o tracking
       navigation.navigate('OrderTracking', { orderId: String(order.id) });
     } catch (err: any) {
       Alert.alert('Erro', err.response?.data?.message || 'Não foi possível criar o pedido');
@@ -108,15 +105,15 @@ export default function AvailableProfessionalsScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container} edges={['top']}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+      <SafeAreaView className="flex-1 bg-bgDark" edges={['top']}>
+        <View className="flex-row items-center justify-between px-5 py-3.5">
+          <TouchableOpacity onPress={() => navigation.goBack()} className="w-10 h-10 items-center justify-center">
             <ArrowLeft size={22} color={colors.textPrimary} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Profissionais</Text>
-          <View style={styles.backBtn} />
+          <Text className="text-white text-lg font-bold">Profissionais</Text>
+          <View className="w-10 h-10" />
         </View>
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <View className="flex-1 justify-center items-center">
           <ActivityIndicator size="large" color={colors.brand} />
         </View>
       </SafeAreaView>
@@ -124,65 +121,65 @@ export default function AvailableProfessionalsScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
+    <SafeAreaView className="flex-1 bg-bgDark" edges={['top']}>
+      <View className="flex-row items-center justify-between px-5 py-3.5">
         <TouchableOpacity
           onPress={() => navigation.goBack()}
-          style={styles.backBtn}
+          className="w-10 h-10 items-center justify-center"
           activeOpacity={0.7}
         >
           <ArrowLeft size={22} color={colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Profissionais</Text>
-        <View style={styles.backBtn} />
+        <Text className="text-white text-lg font-bold">Profissionais</Text>
+        <View className="w-10 h-10" />
       </View>
 
       {/* Info do pedido */}
-      <View style={styles.orderInfo}>
-        <Text style={styles.orderService}>{service}</Text>
-        <View style={styles.orderMeta}>
-          <Text style={styles.orderMetaText}>{schedule}</Text>
-          <View style={styles.dot} />
-          <Text style={styles.orderMetaText} numberOfLines={1}>{address}</Text>
+      <View className="mx-5 bg-surface rounded-[14px] p-4 mb-4">
+        <Text className="text-white text-base font-bold mb-1.5">{service}</Text>
+        <View className="flex-row items-center gap-2">
+          <Text className="text-textSecondary text-[13px]">{schedule}</Text>
+          <View className="w-1 h-1 rounded-full bg-textSecondary" />
+          <Text className="text-textSecondary text-[13px]" numberOfLines={1}>{address}</Text>
         </View>
       </View>
 
-      <Text style={styles.resultsLabel}>
+      <Text className="text-textSecondary text-[13px] px-5 mb-3">
         {professionals.length} profissionais encontrados
       </Text>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.list}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="px-5 gap-3">
         {professionals.map((pro) => (
-          <View key={pro.id} style={styles.card}>
+          <View key={pro.id} className="bg-surface rounded-[14px] p-4 gap-3.5">
             <TouchableOpacity
-              style={styles.cardTop}
+              className="flex-row items-center gap-3.5"
               activeOpacity={0.7}
               onPress={() => navigation.navigate('ProfessionalProfile', { professionalId: String(pro.id) })}
             >
-              <View style={styles.avatar}>
+              <View className="w-[52px] h-[52px] rounded-full bg-bgDark items-center justify-center">
                 <UserRound size={28} color={colors.textSecondary} />
               </View>
-              <View style={styles.proInfo}>
-                <Text style={styles.proName}>{pro.name}</Text>
-                <View style={styles.ratingRow}>
+              <View className="flex-1 gap-1">
+                <Text className="text-white text-base font-semibold">{pro.name}</Text>
+                <View className="flex-row items-center gap-1">
                   <Star size={14} color={colors.brand} fill={colors.brand} />
-                  <Text style={styles.ratingText}>{pro.rating.toFixed(1)}</Text>
-                  <Text style={styles.reviewsText}>({pro.reviewCount} avaliações)</Text>
+                  <Text className="text-brand text-sm font-semibold">{pro.rating.toFixed(1)}</Text>
+                  <Text className="text-textSecondary text-xs">({pro.reviewCount} avaliações)</Text>
                 </View>
-                <View style={styles.viewProfileRow}>
-                  <Text style={styles.viewProfileText}>Ver perfil</Text>
+                <View className="flex-row items-center gap-0.5 mt-0.5">
+                  <Text className="text-brand text-xs font-semibold">Ver perfil</Text>
                   <ChevronRight size={14} color={colors.brand} />
                 </View>
               </View>
             </TouchableOpacity>
 
-            <View style={styles.cardBottom}>
-              <View style={styles.metaRow}>
-                <View style={styles.metaItem}>
+            <View className="gap-3">
+              <View className="flex-row items-center justify-between">
+                <View className="flex-row items-center gap-1.5">
                   <MapPin size={14} color={colors.textSecondary} />
-                  <Text style={styles.metaText}>{pro.city || 'N/A'}</Text>
+                  <Text className="text-textSecondary text-[13px]">{pro.city || 'N/A'}</Text>
                 </View>
-                <Text style={styles.priceText}>
+                <Text className="text-brand text-base font-bold">
                   {pro.servicePrice
                     ? `R$ ${pro.servicePrice.toFixed(0)}/h`
                     : 'A combinar'}
@@ -190,12 +187,12 @@ export default function AvailableProfessionalsScreen() {
               </View>
 
               <TouchableOpacity
-                style={[styles.callBtn, creating && { opacity: 0.5 }]}
+                className={`bg-brand rounded-xl py-3 items-center ${creating ? 'opacity-50' : ''}`}
                 activeOpacity={0.7}
                 onPress={() => handleCall(pro)}
                 disabled={creating}
               >
-                <Text style={styles.callBtnText}>
+                <Text className="text-bgDark text-[15px] font-bold">
                   {creating ? 'Criando pedido...' : 'Chamar'}
                 </Text>
               </TouchableOpacity>
@@ -204,46 +201,15 @@ export default function AvailableProfessionalsScreen() {
         ))}
 
         {professionals.length === 0 && (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyText}>Nenhum profissional encontrado para esta categoria</Text>
+          <View className="items-center py-10">
+            <Text className="text-textSecondary text-[15px] text-center">
+              Nenhum profissional encontrado para esta categoria
+            </Text>
           </View>
         )}
 
-        <View style={{ height: 20 }} />
+        <View className="h-5" />
       </ScrollView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.backgroundDark },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 14 },
-  backBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { color: colors.textPrimary, fontSize: 18, fontWeight: '700' },
-  orderInfo: { marginHorizontal: 20, backgroundColor: colors.surface, borderRadius: 14, padding: 16, marginBottom: 16 },
-  orderService: { color: colors.textPrimary, fontSize: 16, fontWeight: '700', marginBottom: 6 },
-  orderMeta: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  orderMetaText: { color: colors.textSecondary, fontSize: 13, flex: 0 },
-  dot: { width: 4, height: 4, borderRadius: 2, backgroundColor: colors.textSecondary },
-  resultsLabel: { color: colors.textSecondary, fontSize: 13, paddingHorizontal: 20, marginBottom: 12 },
-  list: { paddingHorizontal: 20, gap: 12 },
-  card: { backgroundColor: colors.surface, borderRadius: 14, padding: 16, gap: 14 },
-  cardTop: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  avatar: { width: 52, height: 52, borderRadius: 26, backgroundColor: colors.backgroundDark, alignItems: 'center', justifyContent: 'center' },
-  proInfo: { flex: 1, gap: 4 },
-  proName: { color: colors.textPrimary, fontSize: 16, fontWeight: '600' },
-  ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  ratingText: { color: colors.brand, fontSize: 14, fontWeight: '600' },
-  reviewsText: { color: colors.textSecondary, fontSize: 12 },
-  viewProfileRow: { flexDirection: 'row', alignItems: 'center', gap: 2, marginTop: 2 },
-  viewProfileText: { color: colors.brand, fontSize: 12, fontWeight: '600' },
-  cardBottom: { gap: 12 },
-  metaRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  metaItem: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  metaText: { color: colors.textSecondary, fontSize: 13 },
-  priceText: { color: colors.brand, fontSize: 16, fontWeight: '700' },
-  callBtn: { backgroundColor: colors.brand, borderRadius: 12, paddingVertical: 12, alignItems: 'center' },
-  callBtnText: { color: colors.backgroundDark, fontSize: 15, fontWeight: '700' },
-  emptyState: { alignItems: 'center', paddingVertical: 40 },
-  emptyText: { color: colors.textSecondary, fontSize: 15, textAlign: 'center' },
-});

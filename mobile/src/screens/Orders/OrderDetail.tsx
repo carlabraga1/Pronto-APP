@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
   ScrollView,
   Alert,
@@ -54,15 +53,15 @@ export default function OrderDetailScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container} edges={['top']}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+      <SafeAreaView className="flex-1 bg-bgDark" edges={['top']}>
+        <View className="flex-row items-center justify-between px-5 py-3.5">
+          <TouchableOpacity onPress={() => navigation.goBack()} className="w-10 h-10 items-center justify-center">
             <ArrowLeft size={22} color={colors.textPrimary} />
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Detalhe do Pedido</Text>
-          <View style={styles.backBtn} />
+          <Text className="text-white text-lg font-bold">Detalhe do Pedido</Text>
+          <View className="w-10 h-10" />
         </View>
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <View className="flex-1 justify-center items-center">
           <ActivityIndicator size="large" color={colors.brand} />
         </View>
       </SafeAreaView>
@@ -71,8 +70,8 @@ export default function OrderDetailScreen() {
 
   if (!order) {
     return (
-      <SafeAreaView style={styles.container} edges={['top']}>
-        <Text style={styles.errorText}>Pedido não encontrado</Text>
+      <SafeAreaView className="flex-1 bg-bgDark" edges={['top']}>
+        <Text className="text-white text-base text-center mt-10">Pedido não encontrado</Text>
       </SafeAreaView>
     );
   }
@@ -119,35 +118,40 @@ export default function OrderDetailScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView className="flex-1 bg-bgDark" edges={['top']}>
       {/* Header */}
-      <View style={styles.header}>
+      <View className="flex-row items-center justify-between px-5 py-3.5">
         <TouchableOpacity
           onPress={() => navigation.goBack()}
-          style={styles.backBtn}
+          className="w-10 h-10 items-center justify-center"
           activeOpacity={0.7}
         >
           <ArrowLeft size={22} color={colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Detalhe do Pedido</Text>
-        <View style={styles.backBtn} />
+        <Text className="text-white text-lg font-bold">Detalhe do Pedido</Text>
+        <View className="w-10 h-10" />
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="px-5">
         {/* Status */}
-        <View style={styles.statusCard}>
-          <View style={[styles.statusBarVertical, { backgroundColor: status.color }]} />
-          <View style={styles.statusContent}>
-            <View style={[styles.badge, { backgroundColor: status.bg }]}>
-              <Text style={[styles.badgeText, { color: status.color }]}>{status.label}</Text>
+        <View className="bg-surface rounded-[14px] flex-row overflow-hidden mb-6">
+          <View className="w-1" style={{ backgroundColor: status.color }} />
+          <View className="flex-1 p-4 gap-3.5">
+            <View
+              className="self-start px-3 py-[5px] rounded-[10px]"
+              style={{ backgroundColor: status.bg }}
+            >
+              <Text className="text-[13px] font-semibold" style={{ color: status.color }}>
+                {status.label}
+              </Text>
             </View>
-            <View style={styles.serviceRow}>
-              <View style={styles.serviceIcon}>
+            <View className="flex-row items-center gap-3">
+              <View className="w-[46px] h-[46px] rounded-[14px] bg-bgDark items-center justify-center">
                 <Wrench size={22} color={colors.brand} />
               </View>
-              <View style={styles.serviceInfo}>
-                <Text style={styles.serviceName}>{order.category?.name || 'Serviço'}</Text>
-                <Text style={styles.serviceId}>Pedido #{order.id}</Text>
+              <View className="gap-0.5">
+                <Text className="text-white text-[17px] font-bold">{order.category?.name || 'Serviço'}</Text>
+                <Text className="text-textSecondary text-[13px]">Pedido #{order.id}</Text>
               </View>
             </View>
           </View>
@@ -155,29 +159,33 @@ export default function OrderDetailScreen() {
 
         {/* Profissional */}
         {order.professional && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Profissional</Text>
-            <View style={styles.card}>
-              <View style={styles.professionalRow}>
-                <View style={styles.avatar}>
+          <View className="mb-5">
+            <Text className="text-textSecondary text-[13px] font-semibold uppercase tracking-wide mb-2.5">
+              Profissional
+            </Text>
+            <View className="bg-surface rounded-[14px] p-4">
+              <View className="flex-row items-center gap-3.5 mb-3.5">
+                <View className="w-[50px] h-[50px] rounded-full bg-bgDark items-center justify-center">
                   <UserRound size={28} color={colors.textSecondary} />
                 </View>
-                <View style={styles.professionalInfo}>
-                  <Text style={styles.professionalName}>{order.professional.name}</Text>
-                  <View style={styles.ratingRow}>
+                <View className="gap-1">
+                  <Text className="text-white text-base font-semibold">{order.professional.name}</Text>
+                  <View className="flex-row items-center gap-1">
                     <Star size={14} color={colors.brand} fill={colors.brand} />
-                    <Text style={styles.ratingText}>{order.professional.rating?.toFixed(1) || '0.0'}</Text>
+                    <Text className="text-brand text-sm font-semibold">
+                      {order.professional.rating?.toFixed(1) || '0.0'}
+                    </Text>
                   </View>
                 </View>
               </View>
               {order.professional.phoneNumber && (
                 <TouchableOpacity
-                  style={styles.phoneBtn}
+                  className="flex-row items-center justify-center gap-2 border border-brand rounded-[10px] py-2.5"
                   activeOpacity={0.7}
                   onPress={() => Alert.alert('Ligar', order.professional.phoneNumber)}
                 >
                   <Phone size={18} color={colors.brand} />
-                  <Text style={styles.phoneBtnText}>Ligar</Text>
+                  <Text className="text-brand text-sm font-semibold">Ligar</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -185,39 +193,43 @@ export default function OrderDetailScreen() {
         )}
 
         {/* Informações do serviço */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Informações</Text>
-          <View style={styles.card}>
-            <View style={styles.infoItem}>
+        <View className="mb-5">
+          <Text className="text-textSecondary text-[13px] font-semibold uppercase tracking-wide mb-2.5">
+            Informações
+          </Text>
+          <View className="bg-surface rounded-[14px] p-4">
+            <View className="flex-row items-center gap-3 py-3">
               <Calendar size={16} color={colors.textSecondary} />
-              <View style={styles.infoText}>
-                <Text style={styles.infoLabel}>Data</Text>
-                <Text style={styles.infoValue}>{formatDate(order.createdAt)}</Text>
+              <View className="gap-0.5 flex-1">
+                <Text className="text-textSecondary text-xs">Data</Text>
+                <Text className="text-white text-sm font-medium">{formatDate(order.createdAt)}</Text>
               </View>
             </View>
 
-            <View style={[styles.infoItem, styles.infoBorder]}>
+            <View className="flex-row items-center gap-3 py-3 border-t border-white/5">
               <Clock size={16} color={colors.textSecondary} />
-              <View style={styles.infoText}>
-                <Text style={styles.infoLabel}>Horário</Text>
-                <Text style={styles.infoValue}>{formatTime(order.createdAt)}</Text>
+              <View className="gap-0.5 flex-1">
+                <Text className="text-textSecondary text-xs">Horário</Text>
+                <Text className="text-white text-sm font-medium">{formatTime(order.createdAt)}</Text>
               </View>
             </View>
 
-            <View style={[styles.infoItem, styles.infoBorder]}>
+            <View className="flex-row items-center gap-3 py-3 border-t border-white/5">
               <MapPin size={16} color={colors.textSecondary} />
-              <View style={styles.infoText}>
-                <Text style={styles.infoLabel}>Endereço</Text>
-                <Text style={styles.infoValue}>{order.address}</Text>
+              <View className="gap-0.5 flex-1">
+                <Text className="text-textSecondary text-xs">Endereço</Text>
+                <Text className="text-white text-sm font-medium">{order.address}</Text>
               </View>
             </View>
 
             {order.price && (
-              <View style={[styles.infoItem, styles.infoBorder]}>
+              <View className="flex-row items-center gap-3 py-3 border-t border-white/5">
                 <DollarSign size={16} color={colors.textSecondary} />
-                <View style={styles.infoText}>
-                  <Text style={styles.infoLabel}>Valor</Text>
-                  <Text style={styles.priceValue}>R$ {order.price.toFixed(2).replace('.', ',')}</Text>
+                <View className="gap-0.5 flex-1">
+                  <Text className="text-textSecondary text-xs">Valor</Text>
+                  <Text className="text-brand text-base font-bold">
+                    R$ {order.price.toFixed(2).replace('.', ',')}
+                  </Text>
                 </View>
               </View>
             )}
@@ -226,10 +238,12 @@ export default function OrderDetailScreen() {
 
         {/* Descrição */}
         {order.description && (
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Descrição</Text>
-            <View style={styles.card}>
-              <Text style={{ color: colors.textPrimary, fontSize: 14, lineHeight: 22 }}>
+          <View className="mb-5">
+            <Text className="text-textSecondary text-[13px] font-semibold uppercase tracking-wide mb-2.5">
+              Descrição
+            </Text>
+            <View className="bg-surface rounded-[14px] p-4">
+              <Text className="text-white text-sm leading-[22px]">
                 {order.description}
               </Text>
             </View>
@@ -239,58 +253,20 @@ export default function OrderDetailScreen() {
         {/* Ação */}
         {isActive && (
           <TouchableOpacity
-            style={styles.cancelBtn}
+            className="flex-row items-center justify-center gap-2 py-4 mt-1"
             activeOpacity={0.7}
             onPress={handleCancel}
             disabled={canceling}
           >
             <XCircle size={18} color={colors.danger} />
-            <Text style={styles.cancelText}>
+            <Text className="text-danger text-base font-semibold">
               {canceling ? 'Cancelando...' : 'Cancelar pedido'}
             </Text>
           </TouchableOpacity>
         )}
 
-        <View style={{ height: 30 }} />
+        <View className="h-[30px]" />
       </ScrollView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.backgroundDark },
-  errorText: { color: colors.textPrimary, fontSize: 16, textAlign: 'center', marginTop: 40 },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 14 },
-  backBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { color: colors.textPrimary, fontSize: 18, fontWeight: '700' },
-  content: { paddingHorizontal: 20 },
-  statusCard: { backgroundColor: colors.surface, borderRadius: 14, flexDirection: 'row', overflow: 'hidden', marginBottom: 24 },
-  statusBarVertical: { width: 4 },
-  statusContent: { flex: 1, padding: 16, gap: 14 },
-  badge: { alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 5, borderRadius: 10 },
-  badgeText: { fontSize: 13, fontWeight: '600' },
-  serviceRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  serviceIcon: { width: 46, height: 46, borderRadius: 14, backgroundColor: colors.backgroundDark, alignItems: 'center', justifyContent: 'center' },
-  serviceInfo: { gap: 2 },
-  serviceName: { color: colors.textPrimary, fontSize: 17, fontWeight: '700' },
-  serviceId: { color: colors.textSecondary, fontSize: 13 },
-  section: { marginBottom: 20 },
-  sectionTitle: { color: colors.textSecondary, fontSize: 13, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 },
-  card: { backgroundColor: colors.surface, borderRadius: 14, padding: 16 },
-  professionalRow: { flexDirection: 'row', alignItems: 'center', gap: 14, marginBottom: 14 },
-  avatar: { width: 50, height: 50, borderRadius: 25, backgroundColor: colors.backgroundDark, alignItems: 'center', justifyContent: 'center' },
-  professionalInfo: { gap: 4 },
-  professionalName: { color: colors.textPrimary, fontSize: 16, fontWeight: '600' },
-  ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  ratingText: { color: colors.brand, fontSize: 14, fontWeight: '600' },
-  phoneBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderColor: colors.brand, borderRadius: 10, paddingVertical: 10 },
-  phoneBtnText: { color: colors.brand, fontSize: 14, fontWeight: '600' },
-  infoItem: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 12 },
-  infoBorder: { borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.05)' },
-  infoText: { gap: 2, flex: 1 },
-  infoLabel: { color: colors.textSecondary, fontSize: 12 },
-  infoValue: { color: colors.textPrimary, fontSize: 14, fontWeight: '500' },
-  priceValue: { color: colors.brand, fontSize: 16, fontWeight: '700' },
-  cancelBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingVertical: 16, marginTop: 4 },
-  cancelText: { color: colors.danger, fontSize: 16, fontWeight: '600' },
-});

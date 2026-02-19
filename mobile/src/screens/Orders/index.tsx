@@ -2,7 +2,6 @@ import { useState, useCallback } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
@@ -94,9 +93,9 @@ export default function OrdersScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.container} edges={['top']}>
-        <Text style={styles.title}>Meus Pedidos</Text>
-        <View style={styles.empty}>
+      <SafeAreaView className="flex-1 bg-bgDark px-5" edges={['top']}>
+        <Text className="text-white text-2xl font-bold py-4">Meus Pedidos</Text>
+        <View className="flex-1 items-center justify-center gap-3">
           <ActivityIndicator size="large" color={colors.brand} />
         </View>
       </SafeAreaView>
@@ -104,35 +103,37 @@ export default function OrdersScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <Text style={styles.title}>Meus Pedidos</Text>
+    <SafeAreaView className="flex-1 bg-bgDark px-5" edges={['top']}>
+      <Text className="text-white text-2xl font-bold py-4">Meus Pedidos</Text>
 
       {/* Tabs */}
-      <View style={styles.tabsContainer}>
+      <View className="flex-row bg-surface rounded-xl p-1 mb-5">
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'ativos' && styles.tabActive]}
+          className={`flex-1 py-2.5 items-center rounded-[10px] ${
+            activeTab === 'ativos' ? 'bg-brand' : ''
+          }`}
           activeOpacity={0.7}
           onPress={() => setActiveTab('ativos')}
         >
           <Text
-            style={[
-              styles.tabText,
-              activeTab === 'ativos' && styles.tabTextActive,
-            ]}
+            className={`text-sm font-semibold ${
+              activeTab === 'ativos' ? 'text-bgDark' : 'text-textSecondary'
+            }`}
           >
             Ativos ({activeOrders.length})
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.tab, activeTab === 'historico' && styles.tabActive]}
+          className={`flex-1 py-2.5 items-center rounded-[10px] ${
+            activeTab === 'historico' ? 'bg-brand' : ''
+          }`}
           activeOpacity={0.7}
           onPress={() => setActiveTab('historico')}
         >
           <Text
-            style={[
-              styles.tabText,
-              activeTab === 'historico' && styles.tabTextActive,
-            ]}
+            className={`text-sm font-semibold ${
+              activeTab === 'historico' ? 'text-bgDark' : 'text-textSecondary'
+            }`}
           >
             Histórico ({historyOrders.length})
           </Text>
@@ -141,14 +142,14 @@ export default function OrdersScreen() {
 
       {/* Lista de pedidos */}
       {displayOrders.length === 0 ? (
-        <View style={styles.empty}>
+        <View className="flex-1 items-center justify-center gap-3">
           <ClipboardList size={48} color={colors.textSecondary} />
-          <Text style={styles.emptyText}>
+          <Text className="text-white text-lg font-semibold">
             {activeTab === 'ativos'
               ? 'Nenhum pedido ativo'
               : 'Nenhum pedido no histórico'}
           </Text>
-          <Text style={styles.emptySubtext}>
+          <Text className="text-textSecondary text-sm">
             {activeTab === 'ativos'
               ? 'Seus pedidos em andamento aparecerão aqui'
               : 'Seus pedidos finalizados aparecerão aqui'}
@@ -157,7 +158,7 @@ export default function OrdersScreen() {
       ) : (
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.list}
+          contentContainerClassName="gap-3"
         >
           {displayOrders.map((order) => {
             const status = statusConfig[order.status];
@@ -165,22 +166,22 @@ export default function OrdersScreen() {
             return (
               <TouchableOpacity
                 key={order.id}
-                style={styles.card}
+                className="bg-surface rounded-[14px] flex-row overflow-hidden"
                 activeOpacity={0.7}
                 onPress={() => navigation.navigate('OrderDetail', { orderId: String(order.id) })}
               >
-                <View style={[styles.statusBar, { backgroundColor: status.color }]} />
-                <View style={styles.cardContent}>
-                  <View style={styles.cardTop}>
-                    <View style={styles.serviceRow}>
-                      <View style={styles.serviceIcon}>
+                <View className="w-1" style={{ backgroundColor: status.color }} />
+                <View className="flex-1 p-4 gap-3">
+                  <View className="flex-row items-center justify-between">
+                    <View className="flex-row items-center gap-3 flex-1">
+                      <View className="w-[42px] h-[42px] rounded-xl bg-bgDark items-center justify-center">
                         <Wrench size={20} color={colors.brand} />
                       </View>
-                      <View style={styles.serviceInfo}>
-                        <Text style={styles.serviceName}>
+                      <View className="gap-0.5 flex-1">
+                        <Text className="text-white text-[15px] font-semibold">
                           {order.category?.name || 'Serviço'}
                         </Text>
-                        <Text style={styles.professionalName}>
+                        <Text className="text-textSecondary text-[13px]">
                           {order.professional?.name || 'Aguardando profissional'}
                         </Text>
                       </View>
@@ -188,15 +189,18 @@ export default function OrdersScreen() {
                     <ChevronRight size={18} color={colors.textSecondary} />
                   </View>
 
-                  <View style={styles.cardBottom}>
-                    <View style={styles.dateRow}>
+                  <View className="flex-row items-center justify-between">
+                    <View className="flex-row items-center gap-1.5">
                       <Clock size={14} color={colors.textSecondary} />
-                      <Text style={styles.dateText}>
+                      <Text className="text-textSecondary text-[13px]">
                         {date} às {time}
                       </Text>
                     </View>
-                    <View style={[styles.badge, { backgroundColor: status.bg }]}>
-                      <Text style={[styles.badgeText, { color: status.color }]}>
+                    <View
+                      className="px-2.5 py-1 rounded-[10px]"
+                      style={{ backgroundColor: status.bg }}
+                    >
+                      <Text className="text-xs font-semibold" style={{ color: status.color }}>
                         {status.label}
                       </Text>
                     </View>
@@ -205,134 +209,9 @@ export default function OrdersScreen() {
               </TouchableOpacity>
             );
           })}
-          <View style={{ height: 20 }} />
+          <View className="h-5" />
         </ScrollView>
       )}
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.backgroundDark,
-    paddingHorizontal: 20,
-  },
-  title: {
-    color: colors.textPrimary,
-    fontSize: 24,
-    fontWeight: 'bold',
-    paddingVertical: 16,
-  },
-  tabsContainer: {
-    flexDirection: 'row',
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-    padding: 4,
-    marginBottom: 20,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 10,
-    alignItems: 'center',
-    borderRadius: 10,
-  },
-  tabActive: {
-    backgroundColor: colors.brand,
-  },
-  tabText: {
-    color: colors.textSecondary,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  tabTextActive: {
-    color: colors.backgroundDark,
-  },
-  empty: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 12,
-  },
-  emptyText: {
-    color: colors.textPrimary,
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  emptySubtext: {
-    color: colors.textSecondary,
-    fontSize: 14,
-  },
-  list: {
-    gap: 12,
-  },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: 14,
-    flexDirection: 'row',
-    overflow: 'hidden',
-  },
-  statusBar: {
-    width: 4,
-  },
-  cardContent: {
-    flex: 1,
-    padding: 16,
-    gap: 12,
-  },
-  cardTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  serviceRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    flex: 1,
-  },
-  serviceIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
-    backgroundColor: colors.backgroundDark,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  serviceInfo: {
-    gap: 2,
-    flex: 1,
-  },
-  serviceName: {
-    color: colors.textPrimary,
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  professionalName: {
-    color: colors.textSecondary,
-    fontSize: 13,
-  },
-  cardBottom: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  dateRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  dateText: {
-    color: colors.textSecondary,
-    fontSize: 13,
-  },
-  badge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 10,
-  },
-  badgeText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-});

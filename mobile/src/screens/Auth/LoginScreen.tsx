@@ -2,7 +2,6 @@ import { useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
   TextInput,
   KeyboardAvoidingView,
@@ -16,6 +15,7 @@ import { useNavigation } from '@react-navigation/native';
 import { ArrowLeft, Eye, EyeOff } from 'lucide-react-native';
 import { colors } from '../../constants/colors';
 import { useAuth } from '../../contexts/AuthContext';
+
 
 export default function LoginScreen() {
   const navigation = useNavigation<any>();
@@ -41,43 +41,50 @@ export default function LoginScreen() {
     try {
       await signIn(email.trim(), password);
     } catch (err: any) {
-      const msg =
-        err?.response?.data?.message || 'Não foi possível entrar. Tente novamente.';
-      Alert.alert('Erro', msg);
+      const detail = err?.response?.data
+        ? JSON.stringify(err.response.data)
+        : err?.message || 'Erro desconhecido';
+      Alert.alert('Erro no login', detail);
     }
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView className="flex-1 bg-bgDark">
       <KeyboardAvoidingView
-        style={styles.flex}
+        className="flex-1"
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <ScrollView
-          contentContainerStyle={styles.scroll}
+          contentContainerClassName="px-6 pb-6"
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
           {/* Header */}
           <TouchableOpacity
             onPress={() => navigation.goBack()}
-            style={styles.backBtn}
+            className="w-10 h-10 items-center justify-center -ml-2 mt-2 mb-4"
             activeOpacity={0.7}
           >
             <ArrowLeft size={22} color={colors.textPrimary} />
           </TouchableOpacity>
 
-          <Text style={styles.title}>Entrar</Text>
-          <Text style={styles.subtitle}>
+          <Text className="text-white text-[28px] font-bold mb-2">
+            Entrar
+          </Text>
+          <Text className="text-textSecondary text-[15px] mb-8">
             Bem-vindo de volta ao Pronto
           </Text>
 
           {/* Formulário */}
-          <View style={styles.form}>
+          <View className="gap-5 mb-8">
             <View>
-              <Text style={styles.label}>E-mail</Text>
+              <Text className="text-textSecondary text-[13px] font-semibold mb-2">
+                E-mail
+              </Text>
               <TextInput
-                style={[styles.input, errors.email && styles.inputError]}
+                className={`bg-surface rounded-[14px] px-4 py-3.5 text-white text-base border-[1.5px] ${
+                  errors.email ? 'border-danger' : 'border-transparent'
+                }`}
                 placeholder="seu@email.com"
                 placeholderTextColor={colors.textSecondary}
                 keyboardType="email-address"
@@ -88,14 +95,22 @@ export default function LoginScreen() {
                   if (errors.email) setErrors((e) => ({ ...e, email: undefined }));
                 }}
               />
-              {errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
+              {errors.email && (
+                <Text className="text-danger text-xs mt-1.5 ml-1">{errors.email}</Text>
+              )}
             </View>
 
             <View>
-              <Text style={styles.label}>Senha</Text>
-              <View style={[styles.inputRow, errors.password && styles.inputError]}>
+              <Text className="text-textSecondary text-[13px] font-semibold mb-2">
+                Senha
+              </Text>
+              <View
+                className={`flex-row items-center bg-surface rounded-[14px] px-4 py-3.5 border-[1.5px] ${
+                  errors.password ? 'border-danger' : 'border-transparent'
+                }`}
+              >
                 <TextInput
-                  style={styles.inputFlex}
+                  className="flex-1 text-white text-base"
                   placeholder="Sua senha"
                   placeholderTextColor={colors.textSecondary}
                   secureTextEntry={!showPassword}
@@ -116,39 +131,45 @@ export default function LoginScreen() {
                   )}
                 </TouchableOpacity>
               </View>
-              {errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
+              {errors.password && (
+                <Text className="text-danger text-xs mt-1.5 ml-1">{errors.password}</Text>
+              )}
             </View>
 
             <TouchableOpacity
               onPress={() => navigation.navigate('ForgotPassword')}
               activeOpacity={0.7}
             >
-              <Text style={styles.forgotText}>Esqueci minha senha</Text>
+              <Text className="text-brand text-sm font-semibold self-end">
+                Esqueci minha senha
+              </Text>
             </TouchableOpacity>
           </View>
 
           {/* Botão Entrar */}
           <TouchableOpacity
-            style={[styles.primaryBtn, loading && styles.primaryBtnDisabled]}
+            className={`bg-brand rounded-[14px] py-4 items-center mb-6 ${
+              loading ? 'opacity-70' : ''
+            }`}
             activeOpacity={0.8}
             onPress={handleLogin}
             disabled={loading}
           >
             {loading ? (
-              <ActivityIndicator color={colors.backgroundDark} />
+              <ActivityIndicator color="#121212" />
             ) : (
-              <Text style={styles.primaryBtnText}>Entrar</Text>
+              <Text className="text-bgDark text-[17px] font-bold">Entrar</Text>
             )}
           </TouchableOpacity>
 
           {/* Link cadastrar */}
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>Não tem conta? </Text>
+          <View className="flex-row justify-center">
+            <Text className="text-textSecondary text-sm">Não tem conta? </Text>
             <TouchableOpacity
               onPress={() => navigation.navigate('Register')}
               activeOpacity={0.7}
             >
-              <Text style={styles.footerLink}>Cadastrar</Text>
+              <Text className="text-brand text-sm font-bold">Cadastrar</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -156,113 +177,3 @@ export default function LoginScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.backgroundDark,
-  },
-  flex: { flex: 1 },
-  scroll: {
-    paddingHorizontal: 24,
-    paddingBottom: 24,
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: -8,
-    marginTop: 8,
-    marginBottom: 16,
-  },
-  title: {
-    color: colors.textPrimary,
-    fontSize: 28,
-    fontWeight: '700',
-    marginBottom: 8,
-  },
-  subtitle: {
-    color: colors.textSecondary,
-    fontSize: 15,
-    marginBottom: 32,
-  },
-  form: {
-    gap: 20,
-    marginBottom: 32,
-  },
-  label: {
-    color: colors.textSecondary,
-    fontSize: 13,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  input: {
-    backgroundColor: colors.surface,
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    color: colors.textPrimary,
-    fontSize: 16,
-    borderWidth: 1.5,
-    borderColor: 'transparent',
-  },
-  inputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderWidth: 1.5,
-    borderColor: 'transparent',
-  },
-  inputFlex: {
-    flex: 1,
-    color: colors.textPrimary,
-    fontSize: 16,
-  },
-  inputError: {
-    borderColor: colors.danger,
-  },
-  errorText: {
-    color: colors.danger,
-    fontSize: 12,
-    marginTop: 6,
-    marginLeft: 4,
-  },
-  forgotText: {
-    color: colors.brand,
-    fontSize: 14,
-    fontWeight: '600',
-    alignSelf: 'flex-end',
-  },
-  primaryBtn: {
-    backgroundColor: colors.brand,
-    borderRadius: 14,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  primaryBtnDisabled: {
-    opacity: 0.7,
-  },
-  primaryBtnText: {
-    color: colors.backgroundDark,
-    fontSize: 17,
-    fontWeight: '700',
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-  },
-  footerText: {
-    color: colors.textSecondary,
-    fontSize: 14,
-  },
-  footerLink: {
-    color: colors.brand,
-    fontSize: 14,
-    fontWeight: '700',
-  },
-});

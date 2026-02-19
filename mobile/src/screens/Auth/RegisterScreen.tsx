@@ -2,7 +2,6 @@ import { useState } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
   TextInput,
   KeyboardAvoidingView,
@@ -16,6 +15,7 @@ import { useNavigation } from '@react-navigation/native';
 import { ArrowLeft, Eye, EyeOff, Check } from 'lucide-react-native';
 import { colors } from '../../constants/colors';
 import { useAuth } from '../../contexts/AuthContext';
+
 
 export default function RegisterScreen() {
   const navigation = useNavigation<any>();
@@ -62,52 +62,70 @@ export default function RegisterScreen() {
     if (errors[field]) setErrors((e) => ({ ...e, [field]: '' }));
   };
 
+  const inputClass = (field: string) =>
+    `bg-surface rounded-[14px] px-4 py-3.5 text-white text-base border-[1.5px] ${
+      errors[field] ? 'border-danger' : 'border-transparent'
+    }`;
+
+  const inputRowClass = (field: string) =>
+    `flex-row items-center bg-surface rounded-[14px] px-4 py-3.5 border-[1.5px] ${
+      errors[field] ? 'border-danger' : 'border-transparent'
+    }`;
+
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView className="flex-1 bg-bgDark">
       <KeyboardAvoidingView
-        style={styles.flex}
+        className="flex-1"
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <ScrollView
-          contentContainerStyle={styles.scroll}
+          contentContainerClassName="px-6 pb-6"
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
           {/* Header */}
           <TouchableOpacity
             onPress={() => navigation.goBack()}
-            style={styles.backBtn}
+            className="w-10 h-10 items-center justify-center -ml-2 mt-2 mb-4"
             activeOpacity={0.7}
           >
             <ArrowLeft size={22} color={colors.textPrimary} />
           </TouchableOpacity>
 
-          <Text style={styles.title}>Criar conta</Text>
-          <Text style={styles.subtitle}>
+          <Text className="text-white text-[28px] font-bold mb-2">
+            Criar conta
+          </Text>
+          <Text className="text-textSecondary text-[15px] mb-8">
             Cadastre-se para usar o Pronto
           </Text>
 
           {/* Formulário */}
-          <View style={styles.form}>
+          <View className="gap-5 mb-8">
             {/* Nome */}
             <View>
-              <Text style={styles.label}>Nome completo</Text>
+              <Text className="text-textSecondary text-[13px] font-semibold mb-2">
+                Nome completo
+              </Text>
               <TextInput
-                style={[styles.input, errors.name && styles.inputError]}
+                className={inputClass('name')}
                 placeholder="Seu nome"
                 placeholderTextColor={colors.textSecondary}
                 autoCapitalize="words"
                 value={name}
                 onChangeText={(t) => { setName(t); clearError('name'); }}
               />
-              {!!errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
+              {!!errors.name && (
+                <Text className="text-danger text-xs mt-1.5 ml-1">{errors.name}</Text>
+              )}
             </View>
 
             {/* Email */}
             <View>
-              <Text style={styles.label}>E-mail</Text>
+              <Text className="text-textSecondary text-[13px] font-semibold mb-2">
+                E-mail
+              </Text>
               <TextInput
-                style={[styles.input, errors.email && styles.inputError]}
+                className={inputClass('email')}
                 placeholder="seu@email.com"
                 placeholderTextColor={colors.textSecondary}
                 keyboardType="email-address"
@@ -115,15 +133,19 @@ export default function RegisterScreen() {
                 value={email}
                 onChangeText={(t) => { setEmail(t); clearError('email'); }}
               />
-              {!!errors.email && <Text style={styles.errorText}>{errors.email}</Text>}
+              {!!errors.email && (
+                <Text className="text-danger text-xs mt-1.5 ml-1">{errors.email}</Text>
+              )}
             </View>
 
             {/* Senha */}
             <View>
-              <Text style={styles.label}>Senha</Text>
-              <View style={[styles.inputRow, errors.password && styles.inputError]}>
+              <Text className="text-textSecondary text-[13px] font-semibold mb-2">
+                Senha
+              </Text>
+              <View className={inputRowClass('password')}>
                 <TextInput
-                  style={styles.inputFlex}
+                  className="flex-1 text-white text-base"
                   placeholder="Mínimo 6 caracteres"
                   placeholderTextColor={colors.textSecondary}
                   secureTextEntry={!showPassword}
@@ -141,19 +163,21 @@ export default function RegisterScreen() {
                   )}
                 </TouchableOpacity>
               </View>
-              {!!errors.password && <Text style={styles.errorText}>{errors.password}</Text>}
+              {!!errors.password && (
+                <Text className="text-danger text-xs mt-1.5 ml-1">{errors.password}</Text>
+              )}
               {password.length > 0 && (
-                <View style={styles.passwordRules}>
-                  <Text style={[styles.ruleText, password.length >= 6 && styles.ruleValid]}>
+                <View className="mt-2 gap-1">
+                  <Text className={`text-xs ${password.length >= 6 ? 'text-brand' : 'text-textSecondary'}`}>
                     {password.length >= 6 ? '✓' : '○'} Mínimo 6 caracteres
                   </Text>
-                  <Text style={[styles.ruleText, /[A-Z]/.test(password) && styles.ruleValid]}>
+                  <Text className={`text-xs ${/[A-Z]/.test(password) ? 'text-brand' : 'text-textSecondary'}`}>
                     {/[A-Z]/.test(password) ? '✓' : '○'} Letra maiúscula
                   </Text>
-                  <Text style={[styles.ruleText, /[a-z]/.test(password) && styles.ruleValid]}>
+                  <Text className={`text-xs ${/[a-z]/.test(password) ? 'text-brand' : 'text-textSecondary'}`}>
                     {/[a-z]/.test(password) ? '✓' : '○'} Letra minúscula
                   </Text>
-                  <Text style={[styles.ruleText, /[0-9]/.test(password) && styles.ruleValid]}>
+                  <Text className={`text-xs ${/[0-9]/.test(password) ? 'text-brand' : 'text-textSecondary'}`}>
                     {/[0-9]/.test(password) ? '✓' : '○'} Número
                   </Text>
                 </View>
@@ -162,10 +186,12 @@ export default function RegisterScreen() {
 
             {/* Confirmar Senha */}
             <View>
-              <Text style={styles.label}>Confirmar senha</Text>
-              <View style={[styles.inputRow, errors.confirmPassword && styles.inputError]}>
+              <Text className="text-textSecondary text-[13px] font-semibold mb-2">
+                Confirmar senha
+              </Text>
+              <View className={inputRowClass('confirmPassword')}>
                 <TextInput
-                  style={styles.inputFlex}
+                  className="flex-1 text-white text-base"
                   placeholder="Repita sua senha"
                   placeholderTextColor={colors.textSecondary}
                   secureTextEntry={!showConfirm}
@@ -184,58 +210,63 @@ export default function RegisterScreen() {
                 </TouchableOpacity>
               </View>
               {!!errors.confirmPassword && (
-                <Text style={styles.errorText}>{errors.confirmPassword}</Text>
+                <Text className="text-danger text-xs mt-1.5 ml-1">{errors.confirmPassword}</Text>
               )}
             </View>
 
             {/* Termos */}
             <View>
               <TouchableOpacity
-                style={styles.termsRow}
+                className="flex-row items-center gap-3"
                 activeOpacity={0.7}
                 onPress={() => { setTermsAccepted(!termsAccepted); clearError('terms'); }}
               >
                 <View
-                  style={[
-                    styles.checkbox,
-                    termsAccepted && styles.checkboxChecked,
-                  ]}
+                  className={`w-6 h-6 rounded-lg border-[1.5px] items-center justify-center ${
+                    termsAccepted
+                      ? 'bg-brand border-brand'
+                      : 'border-textSecondary'
+                  }`}
                 >
-                  {termsAccepted && <Check size={14} color={colors.backgroundDark} />}
+                  {termsAccepted && <Check size={14} color="#121212" />}
                 </View>
-                <Text style={styles.termsText}>
+                <Text className="flex-1 text-textSecondary text-[13px] leading-[18px]">
                   Aceito os{' '}
-                  <Text style={styles.termsLink}>termos de uso</Text>
+                  <Text className="text-brand font-semibold">termos de uso</Text>
                   {' '}e{' '}
-                  <Text style={styles.termsLink}>política de privacidade</Text>
+                  <Text className="text-brand font-semibold">política de privacidade</Text>
                 </Text>
               </TouchableOpacity>
-              {!!errors.terms && <Text style={styles.errorText}>{errors.terms}</Text>}
+              {!!errors.terms && (
+                <Text className="text-danger text-xs mt-1.5 ml-1">{errors.terms}</Text>
+              )}
             </View>
           </View>
 
           {/* Botão Cadastrar */}
           <TouchableOpacity
-            style={[styles.primaryBtn, (loading || !termsAccepted) && styles.primaryBtnDisabled]}
+            className={`bg-brand rounded-[14px] py-4 items-center mb-6 ${
+              loading || !termsAccepted ? 'opacity-70' : ''
+            }`}
             activeOpacity={0.8}
             onPress={handleRegister}
             disabled={loading || !termsAccepted}
           >
             {loading ? (
-              <ActivityIndicator color={colors.backgroundDark} />
+              <ActivityIndicator color="#121212" />
             ) : (
-              <Text style={styles.primaryBtnText}>Cadastrar</Text>
+              <Text className="text-bgDark text-[17px] font-bold">Cadastrar</Text>
             )}
           </TouchableOpacity>
 
           {/* Link login */}
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>Já tem conta? </Text>
+          <View className="flex-row justify-center">
+            <Text className="text-textSecondary text-sm">Já tem conta? </Text>
             <TouchableOpacity
               onPress={() => navigation.navigate('Login')}
               activeOpacity={0.7}
             >
-              <Text style={styles.footerLink}>Entrar</Text>
+              <Text className="text-brand text-sm font-bold">Entrar</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -243,146 +274,3 @@ export default function RegisterScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.backgroundDark,
-  },
-  flex: { flex: 1 },
-  scroll: {
-    paddingHorizontal: 24,
-    paddingBottom: 24,
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: -8,
-    marginTop: 8,
-    marginBottom: 16,
-  },
-  title: {
-    color: colors.textPrimary,
-    fontSize: 28,
-    fontWeight: '700',
-    marginBottom: 8,
-  },
-  subtitle: {
-    color: colors.textSecondary,
-    fontSize: 15,
-    marginBottom: 32,
-  },
-  form: {
-    gap: 20,
-    marginBottom: 32,
-  },
-  label: {
-    color: colors.textSecondary,
-    fontSize: 13,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  input: {
-    backgroundColor: colors.surface,
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    color: colors.textPrimary,
-    fontSize: 16,
-    borderWidth: 1.5,
-    borderColor: 'transparent',
-  },
-  inputRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderWidth: 1.5,
-    borderColor: 'transparent',
-  },
-  inputFlex: {
-    flex: 1,
-    color: colors.textPrimary,
-    fontSize: 16,
-  },
-  inputError: {
-    borderColor: colors.danger,
-  },
-  errorText: {
-    color: colors.danger,
-    fontSize: 12,
-    marginTop: 6,
-    marginLeft: 4,
-  },
-  passwordRules: {
-    marginTop: 8,
-    gap: 4,
-  },
-  ruleText: {
-    color: colors.textSecondary,
-    fontSize: 12,
-  },
-  ruleValid: {
-    color: colors.brand,
-  },
-  termsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  checkbox: {
-    width: 24,
-    height: 24,
-    borderRadius: 8,
-    borderWidth: 1.5,
-    borderColor: colors.textSecondary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  checkboxChecked: {
-    backgroundColor: colors.brand,
-    borderColor: colors.brand,
-  },
-  termsText: {
-    flex: 1,
-    color: colors.textSecondary,
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  termsLink: {
-    color: colors.brand,
-    fontWeight: '600',
-  },
-  primaryBtn: {
-    backgroundColor: colors.brand,
-    borderRadius: 14,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginBottom: 24,
-  },
-  primaryBtnDisabled: {
-    opacity: 0.7,
-  },
-  primaryBtnText: {
-    color: colors.backgroundDark,
-    fontSize: 17,
-    fontWeight: '700',
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-  },
-  footerText: {
-    color: colors.textSecondary,
-    fontSize: 14,
-  },
-  footerLink: {
-    color: colors.brand,
-    fontSize: 14,
-    fontWeight: '700',
-  },
-});

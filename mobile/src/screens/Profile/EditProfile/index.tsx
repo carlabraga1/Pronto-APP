@@ -3,7 +3,6 @@ import {
   View,
   Text,
   Image,
-  StyleSheet,
   TouchableOpacity,
   ScrollView,
   Alert,
@@ -19,11 +18,9 @@ import {
   MapPin,
   Lock,
   MapPinned,
-  Shield,
   FileText,
   Trash2,
   Smartphone,
-  Monitor,
   Clock,
   LogOut,
 } from 'lucide-react-native';
@@ -238,65 +235,68 @@ export default function EditProfileScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
+    <SafeAreaView className="flex-1 bg-bgDark" edges={['top']}>
       {/* Header */}
-      <View style={styles.header}>
+      <View className="flex-row items-center justify-between px-5 py-3.5">
         <TouchableOpacity
           onPress={() => navigation.goBack()}
-          style={styles.backBtn}
+          className="w-10 h-10 items-center justify-center"
           activeOpacity={0.7}
         >
           <ArrowLeft size={22} color={colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Informações da conta</Text>
-        <View style={styles.backBtn} />
+        <Text className="text-white text-lg font-bold">Informações da conta</Text>
+        <View className="w-10 h-10" />
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* Avatar */}
-        <View style={styles.avatarSection}>
-          <View style={styles.avatarWrapper}>
-            <View style={styles.avatar}>
+        <View className="items-center py-5 gap-3">
+          <View className="relative">
+            <View className="w-[100px] h-[100px] rounded-full bg-surface items-center justify-center border-[3px] border-brand overflow-hidden">
               {profile?.profileImage ? (
-                <Image source={{ uri: profile.profileImage }} style={styles.avatarImage} />
+                <Image source={{ uri: profile.profileImage }} className="w-full h-full" />
               ) : (
                 <UserRound size={48} color={colors.textSecondary} />
               )}
             </View>
             <TouchableOpacity
-              style={styles.cameraBtn}
+              className="absolute bottom-0 right-0 w-[34px] h-[34px] rounded-full bg-brand items-center justify-center border-[3px] border-bgDark"
               activeOpacity={0.7}
               onPress={handleChangePhoto}
             >
-              <Camera size={16} color={colors.backgroundDark} />
+              <Camera size={16} color="#121212" />
             </TouchableOpacity>
           </View>
           <TouchableOpacity activeOpacity={0.7} onPress={handleChangePhoto}>
-            <Text style={styles.changePhotoText}>Alterar Foto</Text>
+            <Text className="text-brand text-sm font-semibold">Alterar Foto</Text>
           </TouchableOpacity>
         </View>
 
         {/* Dados Pessoais */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Dados Pessoais</Text>
-          <View style={styles.card}>
+        <View className="px-5 mb-5">
+          <Text className="text-textSecondary text-[13px] font-semibold uppercase tracking-wide mb-2.5">
+            Dados Pessoais
+          </Text>
+          <View className="bg-surface rounded-[14px] overflow-hidden">
             {personalFields.map((field, index) => {
               const Icon = field.icon;
               return (
                 <TouchableOpacity
                   key={field.id}
-                  style={[
-                    styles.fieldItem,
-                    index < personalFields.length - 1 && styles.fieldBorder,
-                  ]}
+                  className={`flex-row items-center justify-between px-4 py-3.5 ${
+                    index < personalFields.length - 1 ? 'border-b border-white/5' : ''
+                  }`}
                   activeOpacity={0.7}
                   onPress={() => handleEditField(field)}
                 >
-                  <View style={styles.fieldLeft}>
+                  <View className="flex-row items-center gap-3 flex-1">
                     <Icon size={18} color={colors.textSecondary} />
-                    <View style={styles.fieldText}>
-                      <Text style={styles.fieldLabel}>{field.label}</Text>
-                      <Text style={styles.fieldValue}>{field.value || 'Não informado'}</Text>
+                    <View className="gap-0.5 flex-1">
+                      <Text className="text-white text-sm font-medium">{field.label}</Text>
+                      <Text className="text-textSecondary text-[13px]">
+                        {field.value || 'Não informado'}
+                      </Text>
                     </View>
                   </View>
                   <ChevronRight size={18} color={colors.textSecondary} />
@@ -307,19 +307,21 @@ export default function EditProfileScreen() {
         </View>
 
         {/* Endereços */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Endereços</Text>
-          <View style={styles.card}>
+        <View className="px-5 mb-5">
+          <Text className="text-textSecondary text-[13px] font-semibold uppercase tracking-wide mb-2.5">
+            Endereços
+          </Text>
+          <View className="bg-surface rounded-[14px] overflow-hidden">
             <TouchableOpacity
-              style={styles.fieldItem}
+              className="flex-row items-center justify-between px-4 py-3.5"
               activeOpacity={0.7}
               onPress={() => navigation.navigate('MyAddresses')}
             >
-              <View style={styles.fieldLeft}>
+              <View className="flex-row items-center gap-3 flex-1">
                 <MapPin size={18} color={colors.textSecondary} />
-                <View style={styles.fieldText}>
-                  <Text style={styles.fieldLabel}>Endereço principal</Text>
-                  <Text style={styles.fieldValue}>{addressText}</Text>
+                <View className="gap-0.5 flex-1">
+                  <Text className="text-white text-sm font-medium">Endereço principal</Text>
+                  <Text className="text-textSecondary text-[13px]">{addressText}</Text>
                 </View>
               </View>
               <MapPinned size={18} color={colors.brand} />
@@ -328,57 +330,64 @@ export default function EditProfileScreen() {
         </View>
 
         {/* Segurança */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Segurança</Text>
-          <View style={styles.card}>
+        <View className="px-5 mb-5">
+          <Text className="text-textSecondary text-[13px] font-semibold uppercase tracking-wide mb-2.5">
+            Segurança
+          </Text>
+          <View className="bg-surface rounded-[14px] overflow-hidden">
             <TouchableOpacity
-              style={[styles.fieldItem, styles.fieldBorder]}
+              className="flex-row items-center justify-between px-4 py-3.5 border-b border-white/5"
               activeOpacity={0.7}
               onPress={handleChangePassword}
             >
-              <View style={styles.fieldLeft}>
+              <View className="flex-row items-center gap-3 flex-1">
                 <Lock size={18} color={colors.textSecondary} />
-                <View style={styles.fieldText}>
-                  <Text style={styles.fieldLabel}>Alterar senha</Text>
-                  <Text style={styles.fieldValue}>••••••••</Text>
+                <View className="gap-0.5 flex-1">
+                  <Text className="text-white text-sm font-medium">Alterar senha</Text>
+                  <Text className="text-textSecondary text-[13px]">••••••••</Text>
                 </View>
               </View>
               <ChevronRight size={18} color={colors.textSecondary} />
             </TouchableOpacity>
 
             {/* Atividades de Login */}
-            <View style={styles.loginHeader}>
+            <View className="flex-row items-center gap-2 px-4 pt-3.5 pb-2.5 border-t border-white/5">
               <Clock size={16} color={colors.textSecondary} />
-              <Text style={styles.loginHeaderText}>Atividades de login</Text>
+              <Text className="text-textSecondary text-xs font-semibold uppercase tracking-wide">
+                Atividades de login
+              </Text>
             </View>
 
             {loginActivities.length === 0 ? (
-              <View style={styles.loginItem}>
-                <Text style={styles.fieldValue}>Nenhuma atividade registrada</Text>
+              <View className="flex-row items-start px-4 py-3 gap-3">
+                <Text className="text-textSecondary text-[13px]">Nenhuma atividade registrada</Text>
               </View>
             ) : (
               loginActivities.map((activity, index) => (
                 <View
                   key={activity.id}
-                  style={[
-                    styles.loginItem,
-                    index < loginActivities.length - 1 && styles.fieldBorder,
-                  ]}
+                  className={`flex-row items-start px-4 py-3 gap-3 ${
+                    index < loginActivities.length - 1 ? 'border-b border-white/5' : ''
+                  }`}
                 >
-                  <View style={styles.loginIcon}>
+                  <View className="w-9 h-9 rounded-[10px] bg-white/5 items-center justify-center">
                     <Smartphone size={18} color={activity.isActive ? colors.brand : colors.textSecondary} />
                   </View>
-                  <View style={styles.loginInfo}>
-                    <View style={styles.loginDeviceRow}>
-                      <Text style={styles.fieldLabel}>{activity.device}</Text>
+                  <View className="flex-1 gap-0.5">
+                    <View className="flex-row items-center gap-2">
+                      <Text className="text-white text-sm font-medium">{activity.device}</Text>
                       {activity.isActive && (
-                        <View style={styles.activeBadge}>
-                          <Text style={styles.activeBadgeText}>Ativo</Text>
+                        <View className="bg-success/15 px-2 py-0.5 rounded-[10px]">
+                          <Text className="text-success text-[11px] font-semibold">Ativo</Text>
                         </View>
                       )}
                     </View>
-                    <Text style={styles.fieldValue}>{activity.location || 'Local desconhecido'}</Text>
-                    <Text style={styles.loginDate}>{formatDate(activity.loginTime)}</Text>
+                    <Text className="text-textSecondary text-[13px]">
+                      {activity.location || 'Local desconhecido'}
+                    </Text>
+                    <Text className="text-textSecondary text-xs mt-0.5">
+                      {formatDate(activity.loginTime)}
+                    </Text>
                   </View>
                 </View>
               ))
@@ -386,236 +395,50 @@ export default function EditProfileScreen() {
 
             {/* Encerrar todas as sessões */}
             <TouchableOpacity
-              style={styles.logoutAllBtn}
+              className="flex-row items-center justify-center gap-2 py-3.5 border-t border-white/5"
               activeOpacity={0.7}
               onPress={handleLogoutAll}
             >
               <LogOut size={16} color={colors.danger} />
-              <Text style={styles.logoutAllText}>Encerrar todas as sessões</Text>
+              <Text className="text-danger text-sm font-semibold">Encerrar todas as sessões</Text>
             </TouchableOpacity>
           </View>
         </View>
 
         {/* Privacidade */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Privacidade</Text>
-          <View style={styles.card}>
-
-
+        <View className="px-5 mb-5">
+          <Text className="text-textSecondary text-[13px] font-semibold uppercase tracking-wide mb-2.5">
+            Privacidade
+          </Text>
+          <View className="bg-surface rounded-[14px] overflow-hidden">
             <TouchableOpacity
-              style={[styles.fieldItem, styles.fieldBorder]}
+              className="flex-row items-center justify-between px-4 py-3.5 border-b border-white/5"
               activeOpacity={0.7}
               onPress={() => navigation.navigate('PrivacyPolicy')}
             >
-              <View style={styles.fieldLeft}>
+              <View className="flex-row items-center gap-3 flex-1">
                 <FileText size={18} color={colors.textSecondary} />
-                <Text style={styles.fieldLabel}>Política de privacidade</Text>
+                <Text className="text-white text-sm font-medium">Política de privacidade</Text>
               </View>
               <ChevronRight size={18} color={colors.textSecondary} />
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.fieldItem}
+              className="flex-row items-center justify-between px-4 py-3.5"
               activeOpacity={0.7}
               onPress={handleDeleteAccount}
             >
-              <View style={styles.fieldLeft}>
+              <View className="flex-row items-center gap-3 flex-1">
                 <Trash2 size={18} color={colors.danger} />
-                <Text style={[styles.fieldLabel, { color: colors.danger }]}>
-                  Excluir conta
-                </Text>
+                <Text className="text-danger text-sm font-medium">Excluir conta</Text>
               </View>
               <ChevronRight size={18} color={colors.danger} />
             </TouchableOpacity>
           </View>
         </View>
 
-        <View style={{ height: 30 }} />
+        <View className="h-[30px]" />
       </ScrollView>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.backgroundDark,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    color: colors.textPrimary,
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  avatarSection: {
-    alignItems: 'center',
-    paddingVertical: 20,
-    gap: 12,
-  },
-  avatarWrapper: {
-    position: 'relative',
-  },
-  avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 3,
-    borderColor: colors.brand,
-    overflow: 'hidden',
-  },
-  avatarImage: {
-    width: '100%',
-    height: '100%',
-  },
-  cameraBtn: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: colors.brand,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 3,
-    borderColor: colors.backgroundDark,
-  },
-  changePhotoText: {
-    color: colors.brand,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  section: {
-    paddingHorizontal: 20,
-    marginBottom: 20,
-  },
-  sectionTitle: {
-    color: colors.textSecondary,
-    fontSize: 13,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 10,
-  },
-  card: {
-    backgroundColor: colors.surface,
-    borderRadius: 14,
-    overflow: 'hidden',
-  },
-  fieldItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-  },
-  fieldBorder: {
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.05)',
-  },
-  fieldLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    flex: 1,
-  },
-  fieldText: {
-    gap: 2,
-    flex: 1,
-  },
-  fieldLabel: {
-    color: colors.textPrimary,
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  fieldValue: {
-    color: colors.textSecondary,
-    fontSize: 13,
-  },
-  loginHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 16,
-    paddingTop: 14,
-    paddingBottom: 10,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.05)',
-  },
-  loginHeaderText: {
-    color: colors.textSecondary,
-    fontSize: 12,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  loginItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 12,
-  },
-  loginIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  loginInfo: {
-    flex: 1,
-    gap: 2,
-  },
-  loginDeviceRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  activeBadge: {
-    backgroundColor: 'rgba(76,175,80,0.15)',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 10,
-  },
-  activeBadgeText: {
-    color: colors.success,
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  loginDate: {
-    color: colors.textSecondary,
-    fontSize: 12,
-    marginTop: 2,
-  },
-  logoutAllBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 14,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.05)',
-  },
-  logoutAllText: {
-    color: colors.danger,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-});

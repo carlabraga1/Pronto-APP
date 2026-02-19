@@ -1,4 +1,4 @@
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, ActivityIndicator } from 'react-native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAuth } from '../contexts/AuthContext';
 import { colors } from '../constants/colors';
@@ -29,7 +29,7 @@ export default function AppNavigator() {
 
   if (loading) {
     return (
-      <View style={loadingStyles.container}>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.backgroundDark }}>
         <ActivityIndicator size="large" color={colors.brand} />
       </View>
     );
@@ -138,12 +138,3 @@ export default function AppNavigator() {
     </Stack.Navigator>
   );
 }
-
-const loadingStyles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.backgroundDark,
-  },
-});

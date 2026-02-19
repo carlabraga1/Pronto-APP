@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
   ScrollView,
   Alert,
@@ -10,10 +9,11 @@ import {
   ActivityIndicator,
   Modal,
   TextInput,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Platform } from 'react-native';
 import api from '../../services/api';
+
 
 let MapView: any = View;
 let Marker: any = View;
@@ -73,10 +73,9 @@ const statusColors: Record<TrackingStatus, string> = {
   FINALIZADO: colors.success,
 };
 
-// Coordenadas mock — Manaus
-const DESTINATION = { latitude: -3.1100502, longitude: -60.0244787 }; // Soft Live, R. João Alfredo, 625 - São Geraldo
-const PRO_START = { latitude: -3.1200, longitude: -60.0350 };         // Profissional a caminho
-const INITIAL_ETA = 8; // minutos
+const DESTINATION = { latitude: -3.1100502, longitude: -60.0244787 };
+const PRO_START = { latitude: -3.1200, longitude: -60.0350 };
+const INITIAL_ETA = 8;
 
 const darkMapStyle = [
   { elementType: 'geometry', stylers: [{ color: '#212121' }] },
@@ -98,7 +97,6 @@ const darkMapStyle = [
   { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#3d3d3d' }] },
 ];
 
-// Busca rota real pelas ruas via OSRM (gratuito, sem API key)
 async function fetchRoadRoute(
   start: { latitude: number; longitude: number },
   end: { latitude: number; longitude: number },
@@ -114,7 +112,6 @@ async function fetchRoadRoute(
   } catch (err) {
     console.log('Erro ao buscar rota OSRM:', err);
   }
-  // Fallback: linha reta
   const points = [];
   for (let i = 0; i <= 30; i++) {
     const t = i / 30;
@@ -134,6 +131,8 @@ export default function OrderTrackingScreen() {
   const route = useRoute<any>();
   const { orderId } = route.params;
   const mapRef = useRef<MapView>(null);
+
+
   const [currentStatus, setCurrentStatus] = useState<TrackingStatus>('PROCURANDO');
   const [proPosition, setProPosition] = useState(PRO_START);
   const [eta, setEta] = useState(INITIAL_ETA);
@@ -147,7 +146,6 @@ export default function OrderTrackingScreen() {
   const [submittingReview, setSubmittingReview] = useState(false);
   const [reviewSent, setReviewSent] = useState(false);
 
-  // Buscar rota real ao montar
   useEffect(() => {
     fetchRoadRoute(PRO_START, DESTINATION).then(setRoutePoints);
   }, []);
@@ -203,11 +201,9 @@ export default function OrderTrackingScreen() {
     }
   };
 
-  // Simulação de movimento do profissional seguindo ruas
   useEffect(() => {
     if (!isEnRoute || routePoints.length === 0) return;
 
-    // Amostragem: pegar ~30 pontos igualmente espaçados da rota
     const totalRoutePoints = routePoints.length;
     const sampleCount = Math.min(30, totalRoutePoints);
     const sampledPoints: { latitude: number; longitude: number }[] = [];
@@ -216,7 +212,6 @@ export default function OrderTrackingScreen() {
       sampledPoints.push(routePoints[idx]);
     }
 
-    // Reset ao entrar em A_CAMINHO
     setStepIndex(0);
     setProPosition(sampledPoints[0]);
     setEta(INITIAL_ETA);
@@ -226,7 +221,6 @@ export default function OrderTrackingScreen() {
         const next = prev + 1;
         if (next >= sampledPoints.length) {
           clearInterval(interval);
-          // Chegou ao destino -> avança para INICIADO no backend
           setTimeout(async () => {
             try {
               await api.patch(`/requests/${orderId}/status`, { status: 'INICIADO' });
@@ -238,7 +232,6 @@ export default function OrderTrackingScreen() {
 
         setProPosition(sampledPoints[next]);
 
-        // ETA proporcional
         const remaining = sampledPoints.length - next;
         const newEta = Math.max(1, Math.round((remaining / sampledPoints.length) * INITIAL_ETA));
         setEta(newEta);
@@ -258,7 +251,6 @@ export default function OrderTrackingScreen() {
     });
   }, [proPosition]);
 
-  // Fit map quando entra em A_CAMINHO
   useEffect(() => {
     if (isEnRoute) {
       setTimeout(() => recenterMap(), 400);
@@ -296,7 +288,7 @@ export default function OrderTrackingScreen() {
   const orderAddress = orderData?.address || 'Endereço';
 
   const renderTimeline = () => (
-    <View style={styles.timeline}>
+    <View className="bg-surface rounded-[14px] p-4">
       {steps.map((step, index) => {
         const StepIcon = step.icon;
         const isPast = index < currentIndex;
@@ -306,16 +298,14 @@ export default function OrderTrackingScreen() {
         const isLast = index === steps.length - 1;
 
         return (
-          <View key={step.status} style={styles.timelineItem}>
-            <View style={styles.timelineLeft}>
+          <View key={step.status} className="flex-row min-h-[56px]">
+            <View className="items-center w-8">
               <View
-                style={[
-                  styles.timelineCircle,
-                  {
-                    backgroundColor: isPast || isCurrent ? stepColor : 'transparent',
-                    borderColor: isFuture ? colors.textSecondary : stepColor,
-                  },
-                ]}
+                className="w-[30px] h-[30px] rounded-full border-2 items-center justify-center"
+                style={{
+                  backgroundColor: isPast || isCurrent ? stepColor : 'transparent',
+                  borderColor: isFuture ? colors.textSecondary : stepColor,
+                }}
               >
                 {isPast ? (
                   <Check size={14} color={colors.backgroundDark} />
@@ -327,32 +317,27 @@ export default function OrderTrackingScreen() {
               </View>
               {!isLast && (
                 <View
-                  style={[
-                    styles.timelineLine,
-                    { backgroundColor: isPast ? stepColor : 'rgba(255,255,255,0.1)' },
-                  ]}
+                  className="w-0.5 flex-1 my-1"
+                  style={{ backgroundColor: isPast ? stepColor : 'rgba(255,255,255,0.1)' }}
                 />
               )}
             </View>
 
-            <View style={styles.timelineContent}>
+            <View className="flex-1 pl-3 pb-4 gap-0.5">
               <Text
-                style={[
-                  styles.timelineLabel,
-                  isCurrent && { color: colors.textPrimary, fontWeight: '700' },
-                  isFuture && { color: colors.textSecondary },
-                  isPast && { color: colors.textSecondary },
-                ]}
+                className={`text-sm ${
+                  isCurrent ? 'text-white font-bold' : isFuture ? 'text-textSecondary font-medium' : 'text-textSecondary font-medium'
+                }`}
               >
                 {step.label}
               </Text>
               {isCurrent && step.status !== 'FINALIZADO' && (
-                <Text style={[styles.timelineStatus, { color: stepColor }]}>
+                <Text className="text-xs font-semibold" style={{ color: stepColor }}>
                   Em progresso...
                 </Text>
               )}
               {(isPast || (isCurrent && step.status === 'FINALIZADO')) && (
-                <Text style={styles.timelineDone}>Concluído</Text>
+                <Text className="text-textSecondary text-xs">Concluído</Text>
               )}
             </View>
           </View>
@@ -362,10 +347,10 @@ export default function OrderTrackingScreen() {
   );
 
   const renderMap = () => (
-    <View style={styles.mapWrapper}>
+    <View style={{ height: MAP_HEIGHT, position: 'relative' }}>
       <MapView
         ref={mapRef}
-        style={styles.map}
+        style={{ flex: 1 }}
         provider={Platform.OS === 'android' ? PROVIDER_GOOGLE : undefined}
         customMapStyle={darkMapStyle}
         initialRegion={{
@@ -381,91 +366,73 @@ export default function OrderTrackingScreen() {
         toolbarEnabled={false}
         mapPadding={{ top: 0, right: 0, bottom: 120, left: 0 }}
       >
-        {/* Sombra da rota */}
         {routePoints.length > 0 && (
-          <Polyline
-            coordinates={routePoints}
-            strokeColor="rgba(0,0,0,0.4)"
-            strokeWidth={8}
-          />
+          <Polyline coordinates={routePoints} strokeColor="rgba(0,0,0,0.4)" strokeWidth={8} />
         )}
-        {/* Rota principal */}
         {routePoints.length > 0 && (
-          <Polyline
-            coordinates={routePoints}
-            strokeColor={colors.brand}
-            strokeWidth={5}
-          />
+          <Polyline coordinates={routePoints} strokeColor={colors.brand} strokeWidth={5} />
         )}
 
-        {/* Marker do destino */}
         <Marker coordinate={DESTINATION} anchor={{ x: 0.5, y: 0.5 }}>
-          <View style={styles.destMarkerOuter}>
-            <View style={styles.destMarkerInner} />
+          <View className="w-6 h-6 rounded-full bg-red-500/30 items-center justify-center">
+            <View className="w-3 h-3 rounded-full bg-red-500" />
           </View>
         </Marker>
 
-        {/* Marker do profissional */}
-        <Marker
-          coordinate={proPosition}
-          anchor={{ x: 0.5, y: 0.5 }}
-        >
-          <View style={styles.proMarkerOuter}>
-            <View style={styles.proMarker}>
+        <Marker coordinate={proPosition} anchor={{ x: 0.5, y: 0.5 }}>
+          <View className="w-11 h-11 rounded-full bg-brand/20 items-center justify-center">
+            <View className="w-8 h-8 rounded-full bg-brand items-center justify-center shadow-lg">
               <Navigation size={14} color="#000" />
             </View>
           </View>
         </Marker>
       </MapView>
 
-      {/* Gradiente superior */}
-      <View style={styles.mapGradientTop} />
-
-      {/* ETA badge flutuante */}
-      <View style={styles.etaFloating}>
-        <Text style={styles.etaFloatingNumber}>{eta}</Text>
-        <Text style={styles.etaFloatingLabel}>min</Text>
+      {/* ETA badge */}
+      <View className="absolute top-4 left-4 bg-surface rounded-xl px-3.5 py-2 flex-row items-baseline gap-[3px] shadow-lg">
+        <Text className="text-white text-[22px] font-extrabold">{eta}</Text>
+        <Text className="text-textSecondary text-[13px] font-semibold">min</Text>
       </View>
 
-      {/* Botão recentralizar */}
+      {/* Recenter */}
       <TouchableOpacity
-        style={styles.recenterBtn}
+        className="absolute top-4 right-4 w-10 h-10 rounded-full bg-surface items-center justify-center shadow-lg"
         onPress={recenterMap}
         activeOpacity={0.7}
       >
         <LocateFixed size={18} color={colors.textPrimary} />
       </TouchableOpacity>
 
-      {/* Card do profissional flutuante */}
-      <View style={styles.proFloatingCard}>
+      {/* Floating pro card */}
+      <View className="absolute bottom-4 left-4 right-4 bg-surface rounded-2xl p-4 shadow-xl">
         <TouchableOpacity
           activeOpacity={0.7}
           onPress={() => navigation.navigate('ProfessionalProfile', { professionalId: proId })}
-          style={styles.proFloatingRow}
+          className="flex-row items-center gap-3"
         >
-          <View style={styles.proAvatar}>
+          <View className="w-11 h-11 rounded-full bg-[#333] items-center justify-center">
             <UserRound size={22} color="#fff" />
           </View>
-          <View style={styles.proFloatingInfo}>
-            <Text style={styles.proFloatingName} numberOfLines={1}>{proName}</Text>
-            <View style={styles.proFloatingMeta}>
+          <View className="flex-1 gap-[3px]">
+            <Text className="text-white text-base font-bold" numberOfLines={1}>{proName}</Text>
+            <View className="flex-row items-center gap-[5px]">
               <Star size={11} color={colors.brand} fill={colors.brand} />
-              <Text style={styles.proFloatingRating}>{proRating}</Text>
-              <View style={styles.proFloatingDot} />
-              <Text style={styles.proFloatingService}>{serviceName}</Text>
+              <Text className="text-brand text-[13px] font-bold">{proRating}</Text>
+              <View className="w-[3px] h-[3px] rounded-full bg-textSecondary" />
+              <Text className="text-textSecondary text-[13px]">{serviceName}</Text>
             </View>
           </View>
         </TouchableOpacity>
-        <View style={styles.proFloatingActions}>
+        <View className="flex-row gap-2.5 mt-3 pt-3 border-t border-white/[0.08] justify-center">
           <TouchableOpacity
-            style={styles.actionBtn}
+            className="flex-1 flex-row items-center justify-center gap-2 bg-[#2a2a2a] rounded-xl py-3"
             activeOpacity={0.7}
             onPress={() => Alert.alert('Ligar', proPhone || 'Sem telefone')}
           >
             <Phone size={18} color={colors.textPrimary} />
           </TouchableOpacity>
           <TouchableOpacity
-            style={styles.actionBtn}
+            className="flex-1 flex-row items-center justify-center gap-2 bg-[#2a2a2a] rounded-xl py-3"
             activeOpacity={0.7}
             onPress={() => navigation.navigate('OrderChat', { orderId: String(orderId) })}
           >
@@ -477,17 +444,17 @@ export default function OrderTrackingScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
+    <SafeAreaView className="flex-1 bg-bgDark" edges={['top']}>
+      <View className="flex-row items-center justify-between px-5 py-3.5">
         <TouchableOpacity
           onPress={() => navigation.goBack()}
-          style={styles.backBtn}
+          className="w-10 h-10 items-center justify-center"
           activeOpacity={0.7}
         >
           <ArrowLeft size={22} color={colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Acompanhar Profissional</Text>
-        <View style={styles.backBtn} />
+        <Text className="text-white text-lg font-bold">Acompanhar Profissional</Text>
+        <View className="w-10 h-10" />
       </View>
 
       {isEnRoute ? (
@@ -496,182 +463,184 @@ export default function OrderTrackingScreen() {
 
           <ScrollView
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.contentCompact}
+            contentContainerClassName="px-5 pt-4"
           >
-            {/* Timeline compacta */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Status do pedido</Text>
+            <View className="mb-5">
+              <Text className="text-textSecondary text-[13px] font-semibold uppercase tracking-wide mb-3">
+                Status do pedido
+              </Text>
               {renderTimeline()}
             </View>
 
-            {/* Info do serviço */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Informações</Text>
-              <View style={styles.infoCard}>
-                <View style={styles.infoItem}>
-                  <Text style={styles.infoLabel}>Serviço</Text>
-                  <Text style={styles.infoValue}>{serviceName}</Text>
+            <View className="mb-5">
+              <Text className="text-textSecondary text-[13px] font-semibold uppercase tracking-wide mb-3">
+                Informações
+              </Text>
+              <View className="bg-surface rounded-[14px] p-4">
+                <View className="py-2.5">
+                  <Text className="text-textSecondary text-xs mb-0.5">Serviço</Text>
+                  <Text className="text-white text-sm font-medium">{serviceName}</Text>
                 </View>
-                <View style={[styles.infoItem, styles.infoBorder]}>
-                  <Text style={styles.infoLabel}>Endereço</Text>
-                  <Text style={styles.infoValue}>{orderAddress}</Text>
+                <View className="py-2.5 border-t border-white/5">
+                  <Text className="text-textSecondary text-xs mb-0.5">Endereço</Text>
+                  <Text className="text-white text-sm font-medium">{orderAddress}</Text>
                 </View>
-                <View style={[styles.infoItem, styles.infoBorder]}>
-                  <Text style={styles.infoLabel}>Valor estimado</Text>
-                  <Text style={styles.priceValue}>
-                  {orderData?.price ? `R$ ${orderData.price.toFixed(2).replace('.', ',')}` : 'A combinar'}
-                </Text>
+                <View className="py-2.5 border-t border-white/5">
+                  <Text className="text-textSecondary text-xs mb-0.5">Valor estimado</Text>
+                  <Text className="text-brand text-base font-bold">
+                    {orderData?.price ? `R$ ${orderData.price.toFixed(2).replace('.', ',')}` : 'A combinar'}
+                  </Text>
                 </View>
               </View>
             </View>
 
-            {/* Simular próximo status */}
             {!isFinished && (
               <TouchableOpacity
-                style={styles.simulateBtn}
+                className="flex-row items-center justify-center gap-1.5 border border-dashed border-brand rounded-[10px] py-2.5 mb-3"
                 activeOpacity={0.7}
                 onPress={advanceStatus}
               >
                 <ChevronRight size={16} color={colors.brand} />
-                <Text style={styles.simulateBtnText}>Simular próximo status</Text>
+                <Text className="text-brand text-[13px] font-semibold">Simular próximo status</Text>
               </TouchableOpacity>
             )}
 
-            {/* Cancelar */}
             <TouchableOpacity
-              style={styles.cancelBtn}
+              className="flex-row items-center justify-center gap-2 py-4"
               activeOpacity={0.7}
               onPress={handleCancel}
             >
               <XCircle size={18} color={colors.danger} />
-              <Text style={styles.cancelText}>Cancelar pedido</Text>
+              <Text className="text-danger text-base font-semibold">Cancelar pedido</Text>
             </TouchableOpacity>
 
-            <View style={{ height: 30 }} />
+            <View className="h-[30px]" />
           </ScrollView>
         </>
       ) : (
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
+        <ScrollView showsVerticalScrollIndicator={false} contentContainerClassName="px-5">
           {/* Profissional */}
           <TouchableOpacity
-            style={styles.professionalCard}
+            className="bg-surface rounded-[14px] p-4 mb-6"
             activeOpacity={0.7}
             onPress={() => navigation.navigate('ProfessionalProfile', { professionalId: proId })}
           >
-            <View style={styles.proRow}>
-              <View style={styles.avatar}>
+            <View className="flex-row items-center gap-3.5">
+              <View className="w-[52px] h-[52px] rounded-full bg-bgDark items-center justify-center">
                 <UserRound size={28} color={colors.textSecondary} />
               </View>
-              <View style={styles.proInfo}>
-                <Text style={styles.proName}>{proName}</Text>
-                <View style={styles.ratingRow}>
+              <View className="flex-1 gap-1">
+                <Text className="text-white text-base font-semibold">{proName}</Text>
+                <View className="flex-row items-center gap-1">
                   <Star size={14} color={colors.brand} fill={colors.brand} />
-                  <Text style={styles.ratingText}>{proRating}</Text>
+                  <Text className="text-brand text-sm font-semibold">{proRating}</Text>
                 </View>
               </View>
               <TouchableOpacity
-                style={styles.phoneBtn}
+                className="w-11 h-11 rounded-xl border border-brand items-center justify-center"
                 activeOpacity={0.7}
                 onPress={() => Alert.alert('Ligar', proPhone || 'Sem telefone')}
               >
                 <Phone size={18} color={colors.brand} />
               </TouchableOpacity>
             </View>
-            <View style={styles.viewProfileRow}>
-              <Text style={styles.viewProfileText}>Ver perfil completo</Text>
+            <View className="flex-row items-center justify-center gap-1 border-t border-white/5 pt-3 mt-3">
+              <Text className="text-brand text-[13px] font-semibold">Ver perfil completo</Text>
               <ChevronRight size={14} color={colors.brand} />
             </View>
           </TouchableOpacity>
 
           {/* Timeline */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Status do pedido</Text>
+          <View className="mb-5">
+            <Text className="text-textSecondary text-[13px] font-semibold uppercase tracking-wide mb-3">
+              Status do pedido
+            </Text>
             {renderTimeline()}
           </View>
 
-          {/* Botão Chat - aparece apenas no status ACEITO */}
+          {/* Chat button */}
           {isAccepted && (
             <TouchableOpacity
-              style={styles.chatBtn}
+              className="flex-row items-center justify-center gap-2.5 bg-brand rounded-[14px] py-4 mb-5"
               activeOpacity={0.7}
               onPress={() => navigation.navigate('OrderChat', { orderId: String(orderId) })}
             >
               <MessageCircle size={20} color={colors.backgroundDark} />
-              <Text style={styles.chatBtnText}>Abrir Chat</Text>
+              <Text className="text-bgDark text-base font-bold">Abrir Chat</Text>
             </TouchableOpacity>
           )}
 
-          {/* Info do serviço */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Informações</Text>
-            <View style={styles.infoCard}>
-              <View style={styles.infoItem}>
-                <Text style={styles.infoLabel}>Serviço</Text>
-                <Text style={styles.infoValue}>{serviceName}</Text>
+          {/* Info */}
+          <View className="mb-5">
+            <Text className="text-textSecondary text-[13px] font-semibold uppercase tracking-wide mb-3">
+              Informações
+            </Text>
+            <View className="bg-surface rounded-[14px] p-4">
+              <View className="py-2.5">
+                <Text className="text-textSecondary text-xs mb-0.5">Serviço</Text>
+                <Text className="text-white text-sm font-medium">{serviceName}</Text>
               </View>
-              <View style={[styles.infoItem, styles.infoBorder]}>
-                <Text style={styles.infoLabel}>Endereço</Text>
-                <Text style={styles.infoValue}>{orderAddress}</Text>
+              <View className="py-2.5 border-t border-white/5">
+                <Text className="text-textSecondary text-xs mb-0.5">Endereço</Text>
+                <Text className="text-white text-sm font-medium">{orderAddress}</Text>
               </View>
-              <View style={[styles.infoItem, styles.infoBorder]}>
-                <Text style={styles.infoLabel}>Horário</Text>
-                <Text style={styles.infoValue}>Agora</Text>
+              <View className="py-2.5 border-t border-white/5">
+                <Text className="text-textSecondary text-xs mb-0.5">Horário</Text>
+                <Text className="text-white text-sm font-medium">Agora</Text>
               </View>
-              <View style={[styles.infoItem, styles.infoBorder]}>
-                <Text style={styles.infoLabel}>Valor estimado</Text>
-                <Text style={styles.priceValue}>
+              <View className="py-2.5 border-t border-white/5">
+                <Text className="text-textSecondary text-xs mb-0.5">Valor estimado</Text>
+                <Text className="text-brand text-base font-bold">
                   {orderData?.price ? `R$ ${orderData.price.toFixed(2).replace('.', ',')}` : 'A combinar'}
                 </Text>
               </View>
             </View>
           </View>
 
-          {/* Simular próximo status */}
           {!isFinished && (
             <TouchableOpacity
-              style={styles.simulateBtn}
+              className="flex-row items-center justify-center gap-1.5 border border-dashed border-brand rounded-[10px] py-2.5 mb-3"
               activeOpacity={0.7}
               onPress={advanceStatus}
             >
               <ChevronRight size={16} color={colors.brand} />
-              <Text style={styles.simulateBtnText}>Simular próximo status</Text>
+              <Text className="text-brand text-[13px] font-semibold">Simular próximo status</Text>
             </TouchableOpacity>
           )}
 
-          {/* Cancelar */}
           {!isFinished && (
             <TouchableOpacity
-              style={styles.cancelBtn}
+              className="flex-row items-center justify-center gap-2 py-4"
               activeOpacity={0.7}
               onPress={handleCancel}
             >
               <XCircle size={18} color={colors.danger} />
-              <Text style={styles.cancelText}>Cancelar pedido</Text>
+              <Text className="text-danger text-base font-semibold">Cancelar pedido</Text>
             </TouchableOpacity>
           )}
 
           {isFinished && (
-            <View style={styles.finishedCard}>
+            <View className="items-center gap-2 py-6">
               <Flag size={24} color={colors.success} />
-              <Text style={styles.finishedText}>Serviço finalizado!</Text>
-              <Text style={styles.finishedSub}>Obrigado por usar o Pronto</Text>
+              <Text className="text-success text-lg font-bold">Serviço finalizado!</Text>
+              <Text className="text-textSecondary text-sm">Obrigado por usar o Pronto</Text>
               {!reviewSent && (
                 <TouchableOpacity
-                  style={styles.reviewOpenBtn}
+                  className="flex-row items-center justify-center gap-2 bg-brand rounded-xl py-3 px-6 mt-4"
                   activeOpacity={0.7}
                   onPress={() => setShowReviewModal(true)}
                 >
                   <Star size={18} color={colors.backgroundDark} />
-                  <Text style={styles.reviewOpenBtnText}>Avaliar profissional</Text>
+                  <Text className="text-bgDark text-[15px] font-bold">Avaliar profissional</Text>
                 </TouchableOpacity>
               )}
               {reviewSent && (
-                <Text style={styles.reviewSentText}>Avaliação enviada!</Text>
+                <Text className="text-brand text-sm font-semibold mt-3">Avaliação enviada!</Text>
               )}
             </View>
           )}
 
-          <View style={{ height: 30 }} />
+          <View className="h-[30px]" />
         </ScrollView>
       )}
 
@@ -682,14 +651,14 @@ export default function OrderTrackingScreen() {
         animationType="fade"
         onRequestClose={() => setShowReviewModal(false)}
       >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+        <View className="flex-1 bg-black/70 justify-center items-center px-6">
+          <View className="w-full bg-surface rounded-[20px] p-6 items-center gap-3">
             {!reviewSent ? (
               <>
-                <Text style={styles.modalTitle}>Avalie o profissional</Text>
-                <Text style={styles.modalSubtitle}>{proName}</Text>
+                <Text className="text-white text-xl font-bold">Avalie o profissional</Text>
+                <Text className="text-textSecondary text-sm text-center">{proName}</Text>
 
-                <View style={styles.starsRow}>
+                <View className="flex-row gap-2 my-2">
                   {[1, 2, 3, 4, 5].map((n) => (
                     <TouchableOpacity
                       key={n}
@@ -706,17 +675,20 @@ export default function OrderTrackingScreen() {
                 </View>
 
                 <TextInput
-                  style={styles.modalInput}
+                  className="w-full bg-bgDark rounded-[14px] px-4 py-3 text-white text-sm min-h-[80px]"
                   placeholder="Deixe um comentário (opcional)"
                   placeholderTextColor={colors.textSecondary}
                   value={reviewComment}
                   onChangeText={setReviewComment}
                   multiline
                   maxLength={300}
+                  textAlignVertical="top"
                 />
 
                 <TouchableOpacity
-                  style={[styles.modalSubmitBtn, reviewRating === 0 && styles.modalSubmitBtnDisabled]}
+                  className={`w-full bg-brand rounded-[14px] py-3.5 items-center mt-1 ${
+                    reviewRating === 0 ? 'opacity-40' : ''
+                  }`}
                   activeOpacity={0.7}
                   onPress={handleSubmitReview}
                   disabled={reviewRating === 0 || submittingReview}
@@ -724,29 +696,31 @@ export default function OrderTrackingScreen() {
                   {submittingReview ? (
                     <ActivityIndicator color={colors.backgroundDark} />
                   ) : (
-                    <Text style={styles.modalSubmitText}>Enviar avaliação</Text>
+                    <Text className="text-bgDark text-base font-bold">Enviar avaliação</Text>
                   )}
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={styles.modalSkipBtn}
+                  className="py-2"
                   activeOpacity={0.7}
                   onPress={() => { setShowReviewModal(false); navigation.navigate('Tabs'); }}
                 >
-                  <Text style={styles.modalSkipText}>Pular</Text>
+                  <Text className="text-textSecondary text-sm">Pular</Text>
                 </TouchableOpacity>
               </>
             ) : (
               <>
                 <Star size={48} color={colors.brand} fill={colors.brand} />
-                <Text style={styles.modalTitle}>Obrigado!</Text>
-                <Text style={styles.modalSubtitle}>Sua avaliação ajuda a melhorar o Pronto</Text>
+                <Text className="text-white text-xl font-bold">Obrigado!</Text>
+                <Text className="text-textSecondary text-sm text-center">
+                  Sua avaliação ajuda a melhorar o Pronto
+                </Text>
                 <TouchableOpacity
-                  style={styles.modalSubmitBtn}
+                  className="w-full bg-brand rounded-[14px] py-3.5 items-center mt-1"
                   activeOpacity={0.7}
                   onPress={() => { setShowReviewModal(false); navigation.navigate('Tabs'); }}
                 >
-                  <Text style={styles.modalSubmitText}>Voltar ao início</Text>
+                  <Text className="text-bgDark text-base font-bold">Voltar ao início</Text>
                 </TouchableOpacity>
               </>
             )}
@@ -756,523 +730,3 @@ export default function OrderTrackingScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.backgroundDark,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    color: colors.textPrimary,
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  content: {
-    paddingHorizontal: 20,
-  },
-  contentCompact: {
-    paddingHorizontal: 20,
-    paddingTop: 16,
-  },
-
-  // Map
-  mapWrapper: {
-    height: MAP_HEIGHT,
-    position: 'relative',
-  },
-  map: {
-    flex: 1,
-  },
-  mapGradientTop: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 40,
-    backgroundColor: 'transparent',
-    borderTopWidth: 0,
-  },
-  proMarkerOuter: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255,193,7,0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  proMarker: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: colors.brand,
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 6,
-  },
-  destMarkerOuter: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: 'rgba(226, 25, 25, 0.3)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  destMarkerInner: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    backgroundColor: 'red',
-    elevation: 4,
-  },
-  etaFloating: {
-    position: 'absolute',
-    top: 16,
-    left: 16,
-    backgroundColor: colors.surface,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: 3,
-    elevation: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.4,
-    shadowRadius: 5,
-  },
-  etaFloatingNumber: {
-    color: colors.textPrimary,
-    fontSize: 22,
-    fontWeight: '800',
-  },
-  etaFloatingLabel: {
-    color: colors.textSecondary,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  recenterBtn: {
-    position: 'absolute',
-    top: 16,
-    right: 16,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.4,
-    shadowRadius: 5,
-  },
-
-  // Floating professional card
-  proFloatingCard: {
-    position: 'absolute',
-    bottom: 16,
-    left: 16,
-    right: 16,
-    backgroundColor: colors.surface,
-    borderRadius: 16,
-    padding: 16,
-    elevation: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.5,
-    shadowRadius: 10,
-  },
-  proFloatingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  proAvatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#333',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  proFloatingInfo: {
-    flex: 1,
-    gap: 3,
-  },
-  proFloatingName: {
-    color: colors.textPrimary,
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  proFloatingMeta: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
-  proFloatingRating: {
-    color: colors.brand,
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  proFloatingDot: {
-    width: 3,
-    height: 3,
-    borderRadius: 1.5,
-    backgroundColor: colors.textSecondary,
-  },
-  proFloatingService: {
-    color: colors.textSecondary,
-    fontSize: 13,
-  },
-  proFloatingActions: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 12,
-    paddingTop: 12,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.08)',
-    justifyContent: 'center',
-  },
-  actionBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: '#2a2a2a',
-    borderRadius: 12,
-    paddingVertical: 12,
-  },
-
-  // Profissional card (non-map layout)
-  professionalCard: {
-    backgroundColor: colors.surface,
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 24,
-  },
-  proRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-  },
-  avatar: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    backgroundColor: colors.backgroundDark,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  proInfo: {
-    flex: 1,
-    gap: 4,
-  },
-  proName: {
-    color: colors.textPrimary,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  ratingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  ratingText: {
-    color: colors.brand,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  viewProfileRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 4,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.05)',
-    paddingTop: 12,
-    marginTop: 12,
-  },
-  viewProfileText: {
-    color: colors.brand,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  viewProfileLink: {
-    color: colors.brand,
-    fontSize: 11,
-    fontWeight: '600',
-    marginLeft: 4,
-    textDecorationLine: 'underline',
-  },
-  phoneBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.brand,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  // Section
-  section: {
-    marginBottom: 20,
-  },
-  sectionTitle: {
-    color: colors.textSecondary,
-    fontSize: 13,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 12,
-  },
-
-  // Timeline
-  timeline: {
-    backgroundColor: colors.surface,
-    borderRadius: 14,
-    padding: 16,
-  },
-  timelineItem: {
-    flexDirection: 'row',
-    minHeight: 56,
-  },
-  timelineLeft: {
-    alignItems: 'center',
-    width: 32,
-  },
-  timelineCircle: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    borderWidth: 2,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  timelineLine: {
-    width: 2,
-    flex: 1,
-    marginVertical: 4,
-  },
-  timelineContent: {
-    flex: 1,
-    paddingLeft: 12,
-    paddingBottom: 16,
-    gap: 2,
-  },
-  timelineLabel: {
-    color: colors.textPrimary,
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  timelineStatus: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  timelineDone: {
-    color: colors.textSecondary,
-    fontSize: 12,
-  },
-
-  // Info
-  infoCard: {
-    backgroundColor: colors.surface,
-    borderRadius: 14,
-    padding: 16,
-  },
-  infoItem: {
-    paddingVertical: 10,
-  },
-  infoBorder: {
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.05)',
-  },
-  infoLabel: {
-    color: colors.textSecondary,
-    fontSize: 12,
-    marginBottom: 2,
-  },
-  infoValue: {
-    color: colors.textPrimary,
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  priceValue: {
-    color: colors.brand,
-    fontSize: 16,
-    fontWeight: '700',
-  },
-
-  // Chat button
-  chatBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    backgroundColor: colors.brand,
-    borderRadius: 14,
-    paddingVertical: 16,
-    marginBottom: 20,
-  },
-  chatBtnText: {
-    color: colors.backgroundDark,
-    fontSize: 16,
-    fontWeight: '700',
-  },
-
-  // Simulate button
-  simulateBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    borderWidth: 1,
-    borderColor: colors.brand,
-    borderRadius: 10,
-    paddingVertical: 10,
-    marginBottom: 12,
-    borderStyle: 'dashed',
-  },
-  simulateBtnText: {
-    color: colors.brand,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-
-  // Cancel
-  cancelBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    paddingVertical: 16,
-  },
-  cancelText: {
-    color: colors.danger,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-
-  // Finished
-  finishedCard: {
-    alignItems: 'center',
-    gap: 8,
-    paddingVertical: 24,
-  },
-  finishedText: {
-    color: colors.success,
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  finishedSub: {
-    color: colors.textSecondary,
-    fontSize: 14,
-  },
-  reviewOpenBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: colors.brand,
-    borderRadius: 12,
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    marginTop: 16,
-  },
-  reviewOpenBtnText: {
-    color: colors.backgroundDark,
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  reviewSentText: {
-    color: colors.brand,
-    fontSize: 14,
-    fontWeight: '600',
-    marginTop: 12,
-  },
-
-  // Modal de avaliação
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 24,
-  },
-  modalContent: {
-    width: '100%',
-    backgroundColor: colors.surface,
-    borderRadius: 20,
-    padding: 24,
-    alignItems: 'center',
-    gap: 12,
-  },
-  modalTitle: {
-    color: colors.textPrimary,
-    fontSize: 20,
-    fontWeight: '700',
-  },
-  modalSubtitle: {
-    color: colors.textSecondary,
-    fontSize: 14,
-    textAlign: 'center',
-  },
-  starsRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginVertical: 8,
-  },
-  modalInput: {
-    width: '100%',
-    backgroundColor: colors.backgroundDark,
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    color: colors.textPrimary,
-    fontSize: 14,
-    minHeight: 80,
-    textAlignVertical: 'top',
-  },
-  modalSubmitBtn: {
-    width: '100%',
-    backgroundColor: colors.brand,
-    borderRadius: 14,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  modalSubmitBtnDisabled: {
-    opacity: 0.4,
-  },
-  modalSubmitText: {
-    color: colors.backgroundDark,
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  modalSkipBtn: {
-    paddingVertical: 8,
-  },
-  modalSkipText: {
-    color: colors.textSecondary,
-    fontSize: 14,
-  },
-});

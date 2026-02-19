@@ -1,7 +1,6 @@
 import {
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
   FlatList,
 } from 'react-native';
@@ -16,6 +15,7 @@ import {
 import type { LucideIcon } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import { colors } from '../../constants/colors';
+
 
 type NotificationType = 'order' | 'chat' | 'promo';
 
@@ -58,36 +58,49 @@ const notifications: Notification[] = [];
 export default function NotificationsScreen() {
   const navigation = useNavigation<any>();
 
+
   const renderItem = ({ item }: { item: Notification }) => {
     const config = typeConfig[item.type];
     const Icon = config.icon;
 
     return (
       <TouchableOpacity
-        style={[styles.card, !item.read && styles.cardUnread]}
+        className={`flex-row items-start bg-surface rounded-[14px] p-4 gap-3 ${
+          !item.read ? 'bg-brand/[0.04]' : ''
+        }`}
         activeOpacity={0.7}
       >
-        {!item.read && <View style={styles.unreadDot} />}
+        {!item.read && (
+          <View className="absolute top-4 left-2 w-2 h-2 rounded-full bg-brand" />
+        )}
 
-        <View style={[styles.iconContainer, { backgroundColor: config.bg }]}>
+        <View
+          className="w-[42px] h-[42px] rounded-xl items-center justify-center"
+          style={{ backgroundColor: config.bg }}
+        >
           <Icon size={20} color={config.color} />
         </View>
 
-        <View style={styles.cardContent}>
-          <View style={styles.cardHeader}>
+        <View className="flex-1 gap-1.5">
+          <View className="flex-row justify-between items-center">
             <Text
-              style={[styles.cardTitle, !item.read && styles.cardTitleUnread]}
+              className={`text-white text-[15px] flex-1 mr-2 ${
+                !item.read ? 'font-bold' : 'font-medium'
+              }`}
               numberOfLines={1}
             >
               {item.title}
             </Text>
-            <Text style={styles.cardTimestamp}>{item.timestamp}</Text>
+            <Text className="text-textSecondary text-xs">{item.timestamp}</Text>
           </View>
-          <Text style={styles.cardDescription} numberOfLines={2}>
+          <Text className="text-textSecondary text-[13px] leading-[18px]" numberOfLines={2}>
             {item.description}
           </Text>
-          <View style={[styles.typeBadge, { backgroundColor: config.bg }]}>
-            <Text style={[styles.typeBadgeText, { color: config.color }]}>
+          <View
+            className="self-start px-2 py-[3px] rounded-lg mt-0.5"
+            style={{ backgroundColor: config.bg }}
+          >
+            <Text className="text-[11px] font-semibold" style={{ color: config.color }}>
               {config.label}
             </Text>
           </View>
@@ -97,35 +110,35 @@ export default function NotificationsScreen() {
   };
 
   const renderEmpty = () => (
-    <View style={styles.empty}>
+    <View className="flex-1 items-center justify-center gap-3">
       <BellOff size={48} color={colors.textSecondary} />
-      <Text style={styles.emptyText}>Nenhuma notificação</Text>
-      <Text style={styles.emptySubtext}>
+      <Text className="text-white text-lg font-semibold">Nenhuma notificação</Text>
+      <Text className="text-textSecondary text-sm">
         Suas notificações aparecerão aqui
       </Text>
     </View>
   );
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
+    <SafeAreaView className="flex-1 bg-bgDark" edges={['top']}>
+      <View className="flex-row items-center justify-between px-5 py-3.5">
         <TouchableOpacity
           onPress={() => navigation.goBack()}
-          style={styles.backBtn}
+          className="w-10 h-10 items-center justify-center"
           activeOpacity={0.7}
         >
           <ArrowLeft size={22} color={colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Notificações</Text>
-        <View style={styles.backBtn} />
+        <Text className="text-white text-lg font-bold">Notificações</Text>
+        <View className="w-10 h-10" />
       </View>
 
       <FlatList
         data={notifications}
         keyExtractor={(item) => item.id}
         renderItem={renderItem}
-        contentContainerStyle={
-          notifications.length === 0 ? styles.emptyContainer : styles.list
+        contentContainerClassName={
+          notifications.length === 0 ? 'flex-1' : 'px-5 pt-2 pb-5 gap-2.5'
         }
         ListEmptyComponent={renderEmpty}
         showsVerticalScrollIndicator={false}
@@ -133,118 +146,3 @@ export default function NotificationsScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.backgroundDark,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    color: colors.textPrimary,
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  list: {
-    paddingHorizontal: 20,
-    paddingTop: 8,
-    paddingBottom: 20,
-    gap: 10,
-  },
-  card: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    backgroundColor: colors.surface,
-    borderRadius: 14,
-    padding: 16,
-    gap: 12,
-  },
-  cardUnread: {
-    backgroundColor: 'rgba(255,193,7,0.04)',
-  },
-  unreadDot: {
-    position: 'absolute',
-    top: 16,
-    left: 8,
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.brand,
-  },
-  iconContainer: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  cardContent: {
-    flex: 1,
-    gap: 6,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  cardTitle: {
-    color: colors.textPrimary,
-    fontSize: 15,
-    fontWeight: '500',
-    flex: 1,
-    marginRight: 8,
-  },
-  cardTitleUnread: {
-    fontWeight: '700',
-  },
-  cardTimestamp: {
-    color: colors.textSecondary,
-    fontSize: 12,
-  },
-  cardDescription: {
-    color: colors.textSecondary,
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  typeBadge: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-    marginTop: 2,
-  },
-  typeBadgeText: {
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  emptyContainer: {
-    flex: 1,
-  },
-  empty: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 12,
-  },
-  emptyText: {
-    color: colors.textPrimary,
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  emptySubtext: {
-    color: colors.textSecondary,
-    fontSize: 14,
-  },
-});

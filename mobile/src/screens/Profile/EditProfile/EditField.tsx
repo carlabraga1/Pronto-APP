@@ -3,7 +3,6 @@ import {
   View,
   Text,
   TextInput,
-  StyleSheet,
   TouchableOpacity,
   Alert,
   ActivityIndicator,
@@ -22,7 +21,6 @@ export default function EditFieldScreen() {
   const route = useRoute<EditFieldRouteProp>();
   const { label, value, field, keyboardType = 'default' } = route.params;
   const { updateProfile } = useProfile();
-
   const [text, setText] = useState(value);
   const [loading, setLoading] = useState(false);
 
@@ -42,23 +40,25 @@ export default function EditFieldScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
+    <SafeAreaView className="flex-1 bg-bgDark" edges={['top']}>
+      <View className="flex-row items-center justify-between px-5 py-3.5">
         <TouchableOpacity
           onPress={() => navigation.goBack()}
-          style={styles.backBtn}
+          className="w-10 h-10 items-center justify-center"
           activeOpacity={0.7}
         >
           <ArrowLeft size={22} color={colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{label}</Text>
-        <View style={styles.backBtn} />
+        <Text className="text-white text-lg font-bold">{label}</Text>
+        <View className="w-10 h-10" />
       </View>
 
-      <View style={styles.content}>
-        <Text style={styles.label}>{label}</Text>
+      <View className="px-5 pt-5">
+        <Text className="text-textSecondary text-[13px] font-semibold uppercase tracking-wide mb-2.5">
+          {label}
+        </Text>
         <TextInput
-          style={styles.input}
+          className="bg-surface rounded-[14px] px-4 py-4 text-white text-base border border-white/10"
           value={text}
           onChangeText={setText}
           keyboardType={keyboardType}
@@ -68,7 +68,9 @@ export default function EditFieldScreen() {
         />
 
         <TouchableOpacity
-          style={[styles.saveBtn, (!text.trim() || loading) && styles.saveBtnDisabled]}
+          className={`bg-brand rounded-[14px] py-4 items-center mt-6 ${
+            !text.trim() || loading ? 'opacity-50' : ''
+          }`}
           activeOpacity={0.8}
           onPress={handleSave}
           disabled={!text.trim() || loading}
@@ -76,72 +78,10 @@ export default function EditFieldScreen() {
           {loading ? (
             <ActivityIndicator color={colors.backgroundDark} />
           ) : (
-            <Text style={styles.saveBtnText}>Salvar</Text>
+            <Text className="text-bgDark text-base font-bold">Salvar</Text>
           )}
         </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.backgroundDark,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitle: {
-    color: colors.textPrimary,
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  content: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-  },
-  label: {
-    color: colors.textSecondary,
-    fontSize: 13,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 10,
-  },
-  input: {
-    backgroundColor: colors.surface,
-    borderRadius: 14,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    color: colors.textPrimary,
-    fontSize: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-  },
-  saveBtn: {
-    backgroundColor: colors.brand,
-    borderRadius: 14,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginTop: 24,
-  },
-  saveBtnDisabled: {
-    opacity: 0.5,
-  },
-  saveBtnText: {
-    color: colors.backgroundDark,
-    fontSize: 16,
-    fontWeight: '700',
-  },
-});

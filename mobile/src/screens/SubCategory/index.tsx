@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import {
   View,
   Text,
-  StyleSheet,
   TouchableOpacity,
   FlatList,
   ActivityIndicator,
@@ -30,7 +29,6 @@ export default function SubCategoryScreen() {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<SubCategoryRoute>();
   const { categoryId, categoryName, categoryIcon } = route.params;
-
   const [subcategories, setSubcategories] = useState<Subcategory[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -59,39 +57,42 @@ export default function SubCategoryScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+    <SafeAreaView className="flex-1 bg-bgDark">
+      <View className="flex-row items-center justify-between px-4 py-3">
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          className="w-10 h-10 rounded-full bg-surface items-center justify-center"
+        >
           <ArrowLeft size={22} color={colors.textPrimary} />
         </TouchableOpacity>
-        <View style={styles.headerTitleRow}>
+        <View className="flex-row items-center gap-2">
           {(() => { const Icon = getIcon(categoryIcon); return <Icon size={20} color={colors.brand} />; })()}
-          <Text style={styles.headerTitle}>{categoryName}</Text>
+          <Text className="text-white text-[17px] font-semibold">{categoryName}</Text>
         </View>
-        <View style={{ width: 40 }} />
+        <View className="w-10" />
       </View>
 
       {loading ? (
-        <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <View className="flex-1 justify-center items-center">
           <ActivityIndicator size="large" color={colors.brand} />
         </View>
       ) : (
         <FlatList
           data={subcategories}
-          contentContainerStyle={styles.list}
+          contentContainerClassName="px-5 pt-2 gap-2.5"
           keyExtractor={(item) => String(item.id)}
           renderItem={({ item }) => {
             const SubIcon = getIcon(item.icon || categoryIcon);
             return (
               <TouchableOpacity
-                style={styles.card}
+                className="flex-row items-center bg-surface rounded-[14px] p-4 gap-3.5"
                 activeOpacity={0.7}
                 onPress={() => handleSelect(item)}
               >
-                <View style={styles.iconContainer}>
+                <View className="w-12 h-12 rounded-[14px] bg-bgDark items-center justify-center">
                   <SubIcon size={24} color={colors.brand} />
                 </View>
-                <Text style={styles.cardName}>{item.name}</Text>
+                <Text className="text-white text-base font-medium">{item.name}</Text>
               </TouchableOpacity>
             );
           }}
@@ -100,44 +101,3 @@ export default function SubCategoryScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.backgroundDark },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  headerTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  headerIcon: { width: 20 },
-  headerTitle: { color: colors.textPrimary, fontSize: 17, fontWeight: '600' },
-  list: { paddingHorizontal: 20, paddingTop: 8, gap: 10 },
-  card: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.surface,
-    borderRadius: 14,
-    padding: 16,
-    gap: 14,
-  },
-  iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 14,
-    backgroundColor: colors.backgroundDark,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  subIcon: { width: 24 },
-  cardName: { color: colors.textPrimary, fontSize: 16, fontWeight: '500' },
-});

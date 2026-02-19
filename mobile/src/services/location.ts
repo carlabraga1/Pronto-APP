@@ -53,3 +53,27 @@ export type SearchResult = {
   lat: string;
   lon: string;
 };
+
+export type CepResult = {
+  cep: string;
+  logradouro: string;
+  complemento: string;
+  bairro: string;
+  localidade: string;
+  uf: string;
+  erro?: boolean;
+};
+
+export async function searchByCep(cep: string): Promise<CepResult | null> {
+  const cleaned = cep.replace(/\D/g, '');
+  if (cleaned.length !== 8) return null;
+
+  try {
+    const res = await fetch(`https://viacep.com.br/ws/${cleaned}/json/`);
+    const data: CepResult = await res.json();
+    if (data.erro) return null;
+    return data;
+  } catch {
+    return null;
+  }
+}

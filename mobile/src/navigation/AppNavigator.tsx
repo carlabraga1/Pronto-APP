@@ -15,6 +15,8 @@ import OrderTrackingScreen from '../screens/OrderTracking';
 import ChatScreen from '../screens/Chat';
 import ProfessionalProfileScreen from '../screens/ProfessionalProfile';
 import NotificationsScreen from '../screens/Notifications';
+import MyAddressesScreen from '../screens/Profile/MyAddresses';
+import AddAddressScreen from '../screens/Profile/MyAddresses/AddAddress';
 import WelcomeScreen from '../screens/Auth/WelcomeScreen';
 import LoginScreen from '../screens/Auth/LoginScreen';
 import RegisterScreen from '../screens/Auth/RegisterScreen';
@@ -96,6 +98,16 @@ export default function AppNavigator() {
           <Stack.Screen
             name="EditField"
             component={EditFieldScreen}
+            options={{ animation: 'slide_from_right' }}
+          />
+          <Stack.Screen
+            name="MyAddresses"
+            component={MyAddressesScreen}
+            options={{ animation: 'slide_from_right' }}
+          />
+          <Stack.Screen
+            name="AddAddress"
+            component={AddAddressScreen}
             options={{ animation: 'slide_from_right' }}
           />
         </>

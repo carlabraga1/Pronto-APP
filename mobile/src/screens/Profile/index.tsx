@@ -51,6 +51,8 @@ export default function ProfileScreen() {
   const handleMenuItem = (label: string) => {
     if (label === 'Notificações') {
       navigation.navigate('Notifications');
+    } else if (label === 'Meus Endereços') {
+      navigation.navigate('MyAddresses');
     } else {
       Alert.alert(label, 'Em breve');
     }

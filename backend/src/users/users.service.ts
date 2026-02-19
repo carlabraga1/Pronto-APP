@@ -7,6 +7,7 @@ import {
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../prisma/prisma.service';
 import { UpdateProfileDto, ChangePasswordDto } from './dto/update-profile.dto';
+import { CreateAddressDto, UpdateAddressDto } from './dto/create-address.dto';
 
 @Injectable()
 export class UsersService {
@@ -145,5 +146,79 @@ export class UsersService {
   async deleteAccount(userId: number) {
     await this.prisma.user.delete({ where: { id: userId } });
     return { message: 'Conta excluída com sucesso' };
+  }
+
+  // ─── ADDRESSES ──────────────────────────────────────────────
+
+  async getAddresses(userId: number) {
+    return this.prisma.address.findMany({
+      where: { userId },
+      orderBy: [{ isDefault: 'desc' }, { createdAt: 'desc' }],
+    });
+  }
+
+  async createAddress(userId: number, dto: CreateAddressDto) {
+    const count = await this.prisma.address.count({ where: { userId } });
+
+    return this.prisma.address.create({
+      data: {
+        ...dto,
+        userId,
+        isDefault: count === 0,
+      },
+    });
+  }
+
+  async updateAddress(userId: number, addressId: number, dto: UpdateAddressDto) {
+    const address = await this.prisma.address.findFirst({
+      where: { id: addressId, userId },
+    });
+    if (!address) throw new NotFoundException('Endereço não encontrado');
+
+    return this.prisma.address.update({
+      where: { id: addressId },
+      data: dto,
+    });
+  }
+
+  async deleteAddress(userId: number, addressId: number) {
+    const address = await this.prisma.address.findFirst({
+      where: { id: addressId, userId },
+    });
+    if (!address) throw new NotFoundException('Endereço não encontrado');
+
+    await this.prisma.address.delete({ where: { id: addressId } });
+
+    if (address.isDefault) {
+      const next = await this.prisma.address.findFirst({
+        where: { userId },
+        orderBy: { createdAt: 'desc' },
+      });
+      if (next) {
+        await this.prisma.address.update({
+          where: { id: next.id },
+          data: { isDefault: true },
+        });
+      }
+    }
+
+    return { message: 'Endereço removido com sucesso' };
+  }
+
+  async setDefaultAddress(userId: number, addressId: number) {
+    const address = await this.prisma.address.findFirst({
+      where: { id: addressId, userId },
+    });
+    if (!address) throw new NotFoundException('Endereço não encontrado');
+
+    await this.prisma.address.updateMany({
+      where: { userId, isDefault: true },
+      data: { isDefault: false },
+    });
+
+    return this.prisma.address.update({
+      where: { id: addressId },
+      data: { isDefault: true },
+    });
   }
 }

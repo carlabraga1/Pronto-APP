@@ -34,15 +34,24 @@ import {
   searchAddress,
   type SearchResult,
 } from '../../services/location';
+import * as ExpoLocation from 'expo-location';
 
-export default function LocationScreen({ navigation }: any) {
+export default function LocationScreen({ navigation, route }: any) {
   const mapRef = useRef<MapView>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const returnTo = route?.params?.returnTo;
 
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [searching, setSearching] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState('');
+  const [addressParts, setAddressParts] = useState<{
+    street: string;
+    city: string;
+    state: string;
+    zipCode?: string;
+  } | null>(null);
   const [region, setRegion] = useState<Region>({
     latitude: -23.5505,
     longitude: -46.6333,
@@ -54,6 +63,20 @@ export default function LocationScreen({ navigation }: any) {
     longitude: -46.6333,
   });
 
+  const updateAddressParts = async (lat: number, lon: number) => {
+    try {
+      const [result] = await ExpoLocation.reverseGeocodeAsync({ latitude: lat, longitude: lon });
+      if (result) {
+        setAddressParts({
+          street: result.street || '',
+          city: result.city || '',
+          state: result.region || '',
+          zipCode: result.postalCode || undefined,
+        });
+      }
+    } catch {}
+  };
+
   useEffect(() => {
     (async () => {
       const loc = await getCurrentLocation();
@@ -61,6 +84,7 @@ export default function LocationScreen({ navigation }: any) {
         setMarkerCoord(loc.coords);
         setRegion({ ...loc.coords, latitudeDelta: 0.01, longitudeDelta: 0.01 });
         setSelectedAddress(loc.address);
+        updateAddressParts(loc.coords.latitude, loc.coords.longitude);
       }
     })();
   }, []);
@@ -90,6 +114,7 @@ export default function LocationScreen({ navigation }: any) {
     setResults([]);
     Keyboard.dismiss();
     mapRef.current?.animateToRegion({ ...coords, latitudeDelta: 0.005, longitudeDelta: 0.005 }, 600);
+    updateAddressParts(coords.latitude, coords.longitude);
   };
 
   const handleMapPress = async (e: any) => {
@@ -97,6 +122,7 @@ export default function LocationScreen({ navigation }: any) {
     setMarkerCoord(coords);
     const addr = await reverseGeocode(coords.latitude, coords.longitude);
     setSelectedAddress(addr);
+    updateAddressParts(coords.latitude, coords.longitude);
   };
 
   const handleUseGps = async () => {
@@ -107,11 +133,25 @@ export default function LocationScreen({ navigation }: any) {
       setRegion(newRegion);
       mapRef.current?.animateToRegion(newRegion, 600);
       setSelectedAddress(loc.address);
+      updateAddressParts(loc.coords.latitude, loc.coords.longitude);
     }
   };
 
   const handleConfirm = () => {
-    navigation.navigate('Tabs', { address: selectedAddress });
+    if (returnTo === 'AddAddress') {
+      navigation.navigate('AddAddress', {
+        mapAddress: {
+          street: addressParts?.street || '',
+          city: addressParts?.city || '',
+          state: addressParts?.state || '',
+          latitude: markerCoord.latitude,
+          longitude: markerCoord.longitude,
+          zipCode: addressParts?.zipCode || undefined,
+        },
+      });
+    } else {
+      navigation.navigate('Tabs', { address: selectedAddress });
+    }
   };
 
   return (
@@ -187,7 +227,9 @@ export default function LocationScreen({ navigation }: any) {
           disabled={!selectedAddress}
           activeOpacity={0.7}
         >
-          <Text style={styles.confirmBtnText}>Confirmar</Text>
+          <Text style={styles.confirmBtnText}>
+            {returnTo === 'AddAddress' ? 'Usar este endereço' : 'Confirmar'}
+          </Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>

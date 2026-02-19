@@ -7,7 +7,7 @@ export type AuthStackParamList = {
 
 export type RootStackParamList = {
   Tabs: { address?: string };
-  Location: undefined;
+  Location: { returnTo?: 'AddAddress' } | undefined;
   SubCategory: { categoryId: number; categoryName: string; categoryIcon: string };
   EditProfile: undefined;
   PrivacyPolicy: undefined;
@@ -31,6 +31,18 @@ export type RootStackParamList = {
     value: string;
     field: string;
     keyboardType?: 'default' | 'email-address' | 'phone-pad';
+  };
+  MyAddresses: undefined;
+  AddAddress: {
+    addressId?: number;
+    mapAddress?: {
+      street: string;
+      city: string;
+      state: string;
+      latitude: number;
+      longitude: number;
+      zipCode?: string;
+    };
   };
 };
 

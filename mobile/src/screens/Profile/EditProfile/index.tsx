@@ -313,7 +313,7 @@ export default function EditProfileScreen() {
             <TouchableOpacity
               style={styles.fieldItem}
               activeOpacity={0.7}
-              onPress={() => navigation.navigate('Location')}
+              onPress={() => navigation.navigate('MyAddresses')}
             >
               <View style={styles.fieldLeft}>
                 <MapPin size={18} color={colors.textSecondary} />
